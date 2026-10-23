@@ -2,7 +2,7 @@ import { mkdir, copyFile, chmod } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 const root = fileURLToPath(new URL("../", import.meta.url));
-const target = path.join(root, "public/ocr");
+const target = path.join(root, "public/app/sotm/ocr");
 await mkdir(target, { recursive: true });
 const files = [
   ["tesseract.js/dist/worker.min.js", "worker.min.js"],

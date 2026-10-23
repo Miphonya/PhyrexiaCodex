@@ -1,12 +1,15 @@
 # šotm
 
-Gestionnaire personnel de cartes Magic: The Gathering, statique, local-first et sans compte. Interface française inspirée de la porcelaine et des architectures biomécaniques, sous le nom humain **šotm**, avec l’emblème original et le nom phyrexian affiché en image (`public/wordmark.svg`), comme avant l’essai de police. Ce SVG est l’adaptation vectorielle précédemment utilisée, et non le fichier image original joint. Le nom accessible et le remplacement en cas d’image indisponible restent **šotm**.
+Gestionnaire personnel de cartes Magic: The Gathering, statique, local-first et sans compte. Interface française inspirée de la porcelaine et des architectures biomécaniques, sous le nom humain **šotm**, avec l’emblème original et le nom phyrexian affiché en image (`public/app/sotm/wordmark.svg`), comme avant l’essai de police. Ce SVG est l’adaptation vectorielle précédemment utilisée, et non le fichier image original joint. Le nom accessible et le remplacement en cas d’image indisponible restent **šotm**.
 
 ## Développement
 
 Node.js 22.12+ ou 24, npm.
 
+Depuis la racine du dépôt :
+
 ```sh
+cd app/sotm
 npm ci
 npm run dev
 npm test
@@ -17,7 +20,26 @@ Les tâches cloud utilisent le checkout existant ; aucun worktree supplémentair
 
 ## Hébergement public
 
-Le workflow `.github/workflows/deploy.yml` vérifie les tests et la compilation puis publie `dist` sur GitHub Pages lors d’un push sur `main`. Dans GitHub, sélectionner **Settings → Pages → Source → GitHub Actions**. Aucune publication n’a été effectuée pendant l’implémentation. La base Vite relative et le routage par hash supportent un chemin de dépôt tel que `/PhyrexiaCodex/`.
+Le code source et les outils sont dans `app/sotm/` ; seul `index.html` reste à la racine, avec les métadonnées Git/GitHub. Le workflow `.github/workflows/deploy.yml` vérifie les tests et compile depuis `app/sotm`, puis fournit une archive `sotm-site`. Il ne publie plus automatiquement sur GitHub Pages.
+
+Pour publier sur un autre hébergeur statique, exécuter `npm run build` depuis `app/sotm`, puis copier **le contenu** de `app/sotm/dist/` à l’emplacement voulu :
+
+```text
+index.html
+sw.js                 # petit chargeur nécessaire au cache hors ligne de l’index
+app/sotm/
+  assets/             # JavaScript et CSS compilés
+  logo.svg
+  wordmark.svg
+  favicon.svg
+  fonts/
+  ocr/
+  sw.js               # code principal du service worker
+```
+
+Le `sw.js` de racine est une exception technique pour l’ouverture hors ligne : sans en-tête `Service-Worker-Allowed` personnalisé sur l’hébergeur, un worker placé seulement dans `app/sotm/` ne peut pas contrôler l’index de racine. La base relative et le routage par hash permettent une publication à la racine d’un domaine ou dans un sous-dossier. Ne pas publier le code source tel quel : l’index source contient une entrée TypeScript que Vite doit compiler. Pour le développement, `npm run dev` sert directement l’index source à la racine.
+
+Une collection existante reste disponible si l’origine (protocole, domaine et port) reste la même. Pour changer de domaine ou d’hébergeur, exporter puis réimporter les données JSON.
 
 Ne jamais ajouter de sauvegarde personnelle, de jeton ou de fichier `.env` contenant des secrets au dépôt public. Il n’existe aucun secret requis et aucune clé Cardmarket côté client. Un dépôt public n’expose pas les données IndexedDB des visiteurs. Les appels Scryfall, ses images et le taux de change sont néanmoins des requêtes externes ; ce n’est pas une application dépourvue de toute communication réseau.
 
@@ -67,7 +89,7 @@ Magic: The Gathering et les images de cartes appartiennent à Wizards of the Coa
 
 Les 44 tests Vitest et la compilation de production ont passé. Un parcours navigateur sur les véritables réponses Scryfall a chargé les 479 impressions papier de ONE (pagination incluse), leurs images, une recherche « Elesh Norn set:one », et la mise à jour des prix via `/cards/collection`. Ajout de trois exemplaires, édition de la quantité Trade, thèmes, export, réimport sans doublon, absence de débordement mobile et rechargement hors ligne de la production ont été vérifiés sans exception JavaScript.
 
-Dans la machine cloud, le navigateur automatisé ne fait pas confiance au certificat du proxy. Le parcours réel a donc utilisé un adaptateur de test relayant les requêtes par `curl`, avec validation TLS et certificats système conservés. Les réponses provenaient de Scryfall, sans fixtures. Cet adaptateur ne fait pas partie de l’application ; les visiteurs utilisent directement `fetch` dans leur navigateur. La capture caméra réelle nécessite un appareil et une autorisation utilisateur ; elle n’a pas été validée sur du matériel physique. La publication GitHub Pages reste à effectuer.
+Dans la machine cloud, le navigateur automatisé ne fait pas confiance au certificat du proxy. Le parcours réel a donc utilisé un adaptateur de test relayant les requêtes par `curl`, avec validation TLS et certificats système conservés. Les réponses provenaient de Scryfall, sans fixtures. Cet adaptateur ne fait pas partie de l’application ; les visiteurs utilisent directement `fetch` dans leur navigateur. La capture caméra réelle nécessite un appareil et une autorisation utilisateur ; elle n’a pas été validée sur du matériel physique. La publication est maintenant gérée séparément, depuis le contenu du dossier compilé.
 
 ## Devises, suivi et ajout par liste
 
@@ -98,7 +120,7 @@ La page Échanges affiche les exemplaires disponibles. Le mode automatique est a
 
 ## Ajout par photo et OCR local (historique, en pause)
 
-`npm ci` exécute `scripts/prepare-ocr.mjs` : il copie le worker, les quatre variantes du cœur WebAssembly et les modèles français/anglais des paquets npm verrouillés vers `public/ocr/` (dossier généré et ignoré par Git). La compilation les inclut dans `dist/ocr/`. Aucune clé ni dépendance à un service de reconnaissance externe n’est nécessaire pour le mode Base. Les fichiers occupent environ 21 Mo dans le site compilé ; le navigateur ne charge que le cœur adapté à son appareil et les deux modèles au premier usage.
+`npm ci` exécute `scripts/prepare-ocr.mjs` : il copie le worker, les quatre variantes du cœur WebAssembly et les modèles français/anglais des paquets npm verrouillés vers `public/app/sotm/ocr/` (dossier généré et ignoré par Git). La compilation les inclut dans `dist/app/sotm/ocr/`. Aucune clé ni dépendance à un service de reconnaissance externe n’est nécessaire pour le mode Base. Les fichiers occupent environ 21 Mo dans le site compilé ; le navigateur ne charge que le cœur adapté à son appareil et les deux modèles au premier usage.
 
 Dans Ajouter / Scanner, les trois boutons Nom, Photo et Lot changent la méthode active et mémorisent ce choix. Photo précède Lot ; on peut importer une image ou ouvrir la caméra. La lecture affiche son avancement et peut être annulée. Le worker OCR est terminé après lecture ou annulation ; la caméra est arrêtée lorsqu’on quitte cette méthode. Les photos ne sont pas enregistrées par šotm dans IndexedDB, dans les sauvegardes ou sur un serveur. Le mode + facultatif transmet uniquement la photo sélectionnée au fournisseur après confirmation explicite.
 

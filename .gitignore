@@ -5,4 +5,4 @@ dist/
 *.tsbuildinfo
 
 # OCR assets are generated from integrity-locked npm packages.
-public/ocr/
+app/sotm/public/app/sotm/ocr/

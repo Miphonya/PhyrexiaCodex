@@ -31,7 +31,7 @@ export async function recognizeCard(
   };
   signal.addEventListener("abort", abort, { once: true });
   try {
-    const base = new URL(import.meta.env.BASE_URL + "ocr/", document.baseURI)
+    const base = new URL(import.meta.env.BASE_URL + "app/sotm/ocr/", document.baseURI)
       .href;
     worker = await Promise.race([
       createWorker(["eng", "fra"], OEM.LSTM_ONLY, {

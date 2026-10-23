@@ -24,7 +24,7 @@ import Owned from "./pages/Owned";
 import SetPage from "./pages/SetPage";
 import Settings from "./pages/Settings";
 import { useUI } from "./stores/ui";
-const logo = new URL("../public/logo.svg", import.meta.url).href;
+const logo = import.meta.env.BASE_URL + "app/sotm/logo.svg";
 
 export default function App() {
   const p = usePreferences();

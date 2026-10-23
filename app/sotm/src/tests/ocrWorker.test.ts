@@ -37,9 +37,9 @@ it("le moteur utilise des ressources de la même origine sous le chemin du dép�
   ).toBe("Elesh Norn");
   const options = mocks.createWorker.mock.calls[0][2];
   expect(options.workerPath).toBe(
-    "https://example.com/PhyrexiaCodex/ocr/worker.min.js",
+    "https://example.com/PhyrexiaCodex/app/sotm/ocr/worker.min.js",
   );
-  expect(options.langPath).toBe("https://example.com/PhyrexiaCodex/ocr/");
+  expect(options.langPath).toBe("https://example.com/PhyrexiaCodex/app/sotm/ocr/");
   expect(worker.terminate).toHaveBeenCalled();
 });
 it("une annulation interrompt une lecture en attente et libère le worker", async () => {

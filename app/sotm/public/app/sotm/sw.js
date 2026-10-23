@@ -1,5 +1,5 @@
 /* Same-origin application shell only. Personal data stays in IndexedDB. */
-const CACHE = "sotm-shell-v11";
+const CACHE = "sotm-shell-v12";
 const OCR_CACHE = "sotm-ocr-v1";
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -14,10 +14,10 @@ self.addEventListener("install", (event) => {
       await c.addAll([
         "./",
         "./index.html",
-        "./logo.svg",
-        "./logo.svg?v=2",
-        "./wordmark.svg",
-        "./favicon.svg",
+        "./app/sotm/logo.svg",
+        "./app/sotm/logo.svg?v=3",
+        "./app/sotm/wordmark.svg",
+        "./app/sotm/favicon.svg",
         ...assets,
       ]);
     })(),

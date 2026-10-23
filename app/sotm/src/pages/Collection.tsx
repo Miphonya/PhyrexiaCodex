@@ -22,7 +22,7 @@ import { Button } from "../components/ui/button";
 import { db, savePrefs, updatePrefs } from "../db";
 import { progress } from "../schemas/models";
 import { scryfallService } from "../services/scryfall";
-const logo = new URL("../../public/logo.svg", import.meta.url).href;
+const logo = import.meta.env.BASE_URL + "app/sotm/logo.svg";
 
 export default function Collection() {
   const navigate = useNavigate();

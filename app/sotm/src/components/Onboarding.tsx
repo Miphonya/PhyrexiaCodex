@@ -14,7 +14,7 @@ import type { Preferences } from "../schemas/models";
 import type { CardLanguage } from "../schemas/languages";
 import { LanguageOptions } from "./LanguageSettings";
 import { Button } from "./ui/button";
-const logo = new URL("../../public/logo.svg", import.meta.url).href;
+const logo = import.meta.env.BASE_URL + "app/sotm/logo.svg";
 const steps = ["Bienvenue", "Apparence", "Devise", "Langue", "Données"];
 function Welcome({ initial }: { initial: Preferences }) {
   const [step, setStep] = useState(0),
