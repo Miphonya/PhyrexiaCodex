@@ -3,3 +3,6 @@ dist/
 *.local
 .npm-cache/
 *.tsbuildinfo
+
+# OCR assets are generated from integrity-locked npm packages.
+public/ocr/

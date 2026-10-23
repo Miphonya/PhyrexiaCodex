@@ -52,10 +52,8 @@ export default function App() {
       </a>
       <aside className="sidebar">
         <NavLink to="/" className="brand">
-          <img src={logo} alt="Logo original Phyrexian Vault" />
-          <span>
-            PHYREXIAN<small>VAULT</small>
-          </span>
+          <img src={logo} alt="šotm en écriture phyrexiane" />
+          <span>šotm</span>
         </NavLink>
         <div className="sidebar-label">VOTRE ARCHIVE</div>
         <nav aria-label="Navigation principale">
@@ -76,13 +74,13 @@ export default function App() {
             <br />
             Sous votre seul contrôle.
           </p>
-          <small>PHYREXIAN VAULT · V0.1</small>
+          <small>šotm · V0.2</small>
         </div>
       </aside>
       <div className="workspace">
         <div className="topbar">
           <span>
-            LE VAULT <ChevronRight size={12} /> <b>Archive personnelle</b>
+            šotm <ChevronRight size={12} /> <b>Archive personnelle</b>
           </span>
           <span className="privacy">
             <ShieldCheck size={14} /> Stockage local <i />{" "}

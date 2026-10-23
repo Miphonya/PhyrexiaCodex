@@ -1986,3 +1986,269 @@ main.onboarding-panel {
     font-size: 19px;
   }
 }
+/* Three quiet, persistent ways to add a card. */
+.add-methods {
+  display: flex;
+  width: min(500px, 100%);
+  padding: 5px;
+  gap: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px 14px 3px 14px;
+  margin: 0 0 30px;
+}
+.add-methods button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 2px 9px 2px 9px;
+  font-size: 12px;
+}
+.add-methods button[aria-selected="true"] {
+  color: var(--text-primary);
+  background: var(--surface-elevated);
+  border-color: var(--primary-hover);
+  box-shadow: inset 0 -2px var(--primary);
+}
+.add-methods button:hover {
+  color: var(--text-primary);
+}
+.add-method-panel {
+  min-height: 300px;
+}
+.method-intro h2 {
+  font-size: 27px;
+}
+.method-intro p {
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.add-method-panel .list-importer {
+  margin: 0;
+}
+.photo-scanner {
+  padding: 28px;
+}
+.photo-scanner .actions {
+  margin: 15px 0 22px;
+}
+.camera-stage {
+  max-width: 720px;
+  margin: 25px auto;
+  background: var(--background);
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.camera-stage video {
+  display: block;
+  width: 100%;
+  max-height: 450px;
+  object-fit: contain;
+}
+.camera-stage p {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 14px 0;
+}
+.ocr-workspace {
+  display: grid;
+  grid-template-columns: minmax(150px, 260px) 1fr;
+  gap: 30px;
+  align-items: start;
+  margin-top: 26px;
+}
+.captured-card {
+  width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: var(--background);
+  border: 1px solid var(--border);
+}
+.ocr-review {
+  min-width: 0;
+}
+.ocr-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  color: var(--porcelain);
+  margin-bottom: 12px;
+}
+.ocr-review p {
+  font-size: 11px;
+}
+.ocr-review label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.ocr-review input {
+  width: 100%;
+}
+.ocr-review .form-grid {
+  margin: 15px 0;
+}
+.ocr-progress {
+  padding: 25px 0;
+}
+.ocr-progress > svg {
+  color: var(--porcelain);
+  margin-bottom: 20px;
+}
+.ocr-progress h3 {
+  font-family: var(--font-title);
+  font-size: 24px;
+}
+.ocr-progress progress {
+  height: 5px;
+  margin: 20px 0;
+}
+.ocr-progress p,
+.scanner-privacy {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.scanner-privacy {
+  margin: 25px 0 0;
+  line-height: 1.8;
+}
+.ocr-raw {
+  margin-top: 20px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.ocr-raw summary {
+  cursor: pointer;
+  padding: 10px 0;
+}
+.ocr-raw pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 240px;
+  overflow: auto;
+  background: var(--background);
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.search-results {
+  margin-top: 30px;
+}
+@media (max-width: 760px) {
+  .add-methods {
+    width: 100%;
+    margin-bottom: 25px;
+  }
+  .add-methods button {
+    padding: 12px 7px;
+    gap: 7px;
+    font-size: 11px;
+  }
+  .add-methods button svg {
+    width: 16px;
+  }
+  .photo-scanner {
+    padding: 20px;
+  }
+  .ocr-workspace {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .captured-card {
+    max-height: 280px;
+    max-width: 240px;
+    margin: auto;
+  }
+  .photo-scanner > .actions {
+    gap: 8px;
+  }
+  .photo-scanner > .actions .button {
+    font-size: 10px;
+    padding: 10px 12px;
+  }
+  .method-intro h2 {
+    font-size: 24px;
+  }
+  .ocr-review .actions {
+    flex-wrap: wrap;
+  }
+}
+/* šotm: human name and supplied Phyrexian wordmark. */
+.brand {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding-bottom: 40px;
+}
+.brand img {
+  width: 155px;
+  height: 44px;
+  object-fit: contain;
+  filter: invert(88%) sepia(15%) saturate(346%) hue-rotate(348deg)
+    brightness(90%);
+}
+.brand > span {
+  font-size: 31px;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.onboarding-brand img {
+  width: 138px;
+  height: 40px;
+  object-fit: contain;
+  filter: invert(88%) sepia(15%) saturate(346%) hue-rotate(348deg)
+    brightness(90%);
+}
+.onboarding-brand > span {
+  font-size: 32px;
+  letter-spacing: 1px;
+}
+.sigil img {
+  width: 78px;
+  height: 35px;
+  object-fit: contain;
+  filter: invert(88%) sepia(15%) saturate(346%) hue-rotate(348deg)
+    brightness(90%);
+}
+footer img {
+  width: 45px;
+  height: 18px;
+  object-fit: contain;
+  filter: invert(88%) sepia(15%) saturate(346%) hue-rotate(348deg)
+    brightness(90%);
+}
+.coming-soon img {
+  width: 180px;
+  height: 55px;
+  object-fit: contain;
+  filter: invert(88%) sepia(15%) saturate(346%) hue-rotate(348deg)
+    brightness(90%);
+}
+.vault-loading img {
+  width: 140px;
+  height: 40px;
+  object-fit: contain;
+  filter: invert(88%) sepia(15%) saturate(346%) hue-rotate(348deg)
+    brightness(90%);
+}
+[data-theme="light"] .brand img,
+[data-theme="light"] .onboarding-brand img,
+[data-theme="light"] .sigil img,
+[data-theme="light"] footer img,
+[data-theme="light"] .coming-soon img {
+  filter: none;
+}
+.skip-link:focus:not(:focus-visible) {
+  top: -100px;
+}

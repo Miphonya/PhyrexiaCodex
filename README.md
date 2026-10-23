@@ -1,6 +1,6 @@
-# Phyrexian Vault
+# šotm
 
-Gestionnaire personnel de cartes Magic: The Gathering, statique, local-first et sans compte. Interface française inspirée de la porcelaine et des architectures biomécaniques, avec un logo SVG original.
+Gestionnaire personnel de cartes Magic: The Gathering, statique, local-first et sans compte. Interface française inspirée de la porcelaine et des architectures biomécaniques, sous le nom humain **šotm**, avec une adaptation SVG du symbole phyrexian fourni. Le SVG est une reprise vectorielle, pas le fichier original joint.
 
 ## Développement
 
@@ -55,7 +55,7 @@ La liste des extensions provient de Scryfall ; le compteur affiche les impressio
 
 La recherche supporte la syntaxe Scryfall, l’autocomplétion, les impressions et le chargement des pages suivantes. Les filtres s’appliquent aux résultats chargés. Les lots peuvent indiquer leur langue ; la recherche `lang:fr` permet de choisir explicitement une impression localisée. Les prix sont indicatifs, datés dans le catalogue local, et ne reflètent pas l’état, les signatures ou les altérations. Les prix etched sont indisponibles si Scryfall ne fournit pas de champ EUR adapté. Aucun prix manquant n’est inventé.
 
-La caméra capture une image temporaire, sans envoi ni OCR. L’utilisateur effectue une recherche manuelle et vérifie l’impression. Aucun service de reconnaissance n’est attribué à Scryfall. Le recadrage, un moteur OCR et un fournisseur Cardmarket officiel ne sont pas intégrés à cette version. Il n’y a ni scraping ni synchronisation distante.
+La caméra ou une image JPEG/PNG/WebP fournit une photo temporaire à Tesseract.js, exécuté dans un Web Worker local. Les modèles français et anglais sont fournis par le site. Le texte reconnu doit être vérifié et corrigé avant une recherche Scryfall, puis l’impression et l’ajout doivent être confirmés manuellement. Scryfall ne reconnaît aucune image : seuls les champs de recherche validés lui sont envoyés. Le recadrage manuel et un fournisseur Cardmarket officiel ne sont pas intégrés. Il n’y a ni scraping ni synchronisation distante.
 
 Magic: The Gathering et les images de cartes appartiennent à Wizards of the Coast. Données et images fournies par Scryfall. Application indépendante, non affiliée à ces sociétés.
 
@@ -65,7 +65,7 @@ Magic: The Gathering et les images de cartes appartiennent à Wizards of the Coa
 
 ### Validation de cette implémentation
 
-Les 30 tests Vitest et la compilation de production ont passé. Un parcours navigateur sur les véritables réponses Scryfall a chargé les 479 impressions papier de ONE (pagination incluse), leurs images, une recherche « Elesh Norn set:one », et la mise à jour des prix via `/cards/collection`. Ajout de trois exemplaires, édition de la quantité Trade, thèmes, export, réimport sans doublon, absence de débordement mobile et rechargement hors ligne de la production ont été vérifiés sans exception JavaScript.
+Les 38 tests Vitest et la compilation de production ont passé. Un parcours navigateur sur les véritables réponses Scryfall a chargé les 479 impressions papier de ONE (pagination incluse), leurs images, une recherche « Elesh Norn set:one », et la mise à jour des prix via `/cards/collection`. Ajout de trois exemplaires, édition de la quantité Trade, thèmes, export, réimport sans doublon, absence de débordement mobile et rechargement hors ligne de la production ont été vérifiés sans exception JavaScript.
 
 Dans la machine cloud, le navigateur automatisé ne fait pas confiance au certificat du proxy. Le parcours réel a donc utilisé un adaptateur de test relayant les requêtes par `curl`, avec validation TLS et certificats système conservés. Les réponses provenaient de Scryfall, sans fixtures. Cet adaptateur ne fait pas partie de l’application ; les visiteurs utilisent directement `fetch` dans leur navigateur. La capture caméra réelle nécessite un appareil et une autorisation utilisateur ; elle n’a pas été validée sur du matériel physique. La publication GitHub Pages reste à effectuer.
 
@@ -92,6 +92,20 @@ Au premier lancement de cette version sur un navigateur, quatre étapes présent
 
 La langue des nouveaux lots est réglable dans les paramètres (français par défaut), présélectionnée dans l’éditeur et appliquée aux listes. Elle ne change ni les lots existants, ni les noms ou images Scryfall ; les exemplaires physiques et le catalogue ont des langues distinctes. L’éditeur permet de modifier la langue pour un lot précis.
 
-Le détail d’une extension trie par numéro de carte avec un ordre naturel (`1`, `2`, `10`, `10a`). Les contrôles visibles se limitent à la recherche, la possession, la rareté et le tri. Couleur et type restent accessibles dans « Plus de filtres ». Le choix d’édition ne s’affiche que hors des extensions, dans les options avancées et si plusieurs éditions sont présentes. Aucun filtre de finition n’est affiché ; la finition reste un attribut modifiable à l’ajout. Les recherches par nom précèdent l’import par liste, puis la capture caméra.
+Le détail d’une extension trie par numéro de carte avec un ordre naturel (`1`, `2`, `10`, `10a`). Les contrôles visibles se limitent à la recherche, la possession, la rareté et le tri. Couleur et type restent accessibles dans « Plus de filtres ». Le choix d’édition ne s’affiche que hors des extensions, dans les options avancées et si plusieurs éditions sont présentes. Aucun filtre de finition n’est affiché ; la finition reste un attribut modifiable à l’ajout. La barre d’ajout propose Nom → Photo → Lot. Un seul formulaire est affiché à la fois et la dernière méthode utilisée est conservée dans les préférences locales et les sauvegardes.
 
 La page Trade affiche uniquement « Soon… ». Les quantités Trade existantes sont conservées dans les lots et les sauvegardes pour une reprise ultérieure de cette fonction.
+
+## Ajout par photo et OCR local
+
+`npm ci` exécute `scripts/prepare-ocr.mjs` : il copie le worker, les quatre variantes du cœur WebAssembly et les modèles français/anglais des paquets npm verrouillés vers `public/ocr/` (dossier généré et ignoré par Git). La compilation les inclut dans `dist/ocr/`. Aucune clé ni dépendance à un service OCR externe n’est nécessaire. Les fichiers occupent environ 21 Mo dans le site compilé ; le navigateur ne charge que le cœur adapté à son appareil et les deux modèles au premier usage.
+
+Dans Ajouter / Scanner, les trois boutons Nom, Photo et Lot changent la méthode active et mémorisent ce choix. Photo précède Lot ; on peut importer une image ou ouvrir la caméra. La lecture affiche son avancement et peut être annulée. Le worker OCR est terminé après lecture ou annulation ; la caméra est arrêtée lorsqu’on quitte cette méthode. Les photos ne sont pas enregistrées dans IndexedDB, dans les sauvegardes ou sur un serveur.
+
+L’OCR propose un nom et, lorsqu’ils sont lisibles, un numéro et un code d’extension. Ce sont des suggestions faillibles, notamment pour les reflets, les photographies inclinées, les traitements foil et les cadres alternatifs. Les modèles couvrent le français et l’anglais, pas l’écriture phyrexiane ni toutes les langues de cartes. Le score indique la confiance du moteur sur le texte, pas une certitude d’identification. L’utilisateur peut tout corriger ; une recherche explicite sur Scryfall précède toujours l’ajout manuel d’un lot.
+
+En production, les ressources OCR utilisées sont conservées dans un Cache Storage séparé, limité à 12 fichiers statiques ; aucune photo personnelle n’y est mise. La lecture peut donc fonctionner hors ligne après un premier chargement complet. Les résultats Scryfall non encore chargés et les images de catalogue nécessitent toujours une connexion. Vider les données du site supprime ces ressources et la collection locale ; exportez vos sauvegardes.
+
+Le changement de nom conserve volontairement l’identifiant IndexedDB historique `phyrexian-vault` et le schéma de sauvegarde version 1, afin de retrouver les collections existantes à la même origine. Le dépôt et le chemin GitHub Pages ne sont pas renommés.
+
+Le parcours navigateur a exécuté le vrai moteur sur l’image non modifiée d’Elesh Norn, identifié son nom, puis testé la correction et la recherche réelle Scryfall avant ajout explicite. La lecture a été répétée avec succès hors ligne après rechargement. Le test a aussi vérifié les trois méthodes, leur persistance, l’arrêt d’une caméra simulée et le fonctionnement sous `/PhyrexiaCodex/`. Une caméra physique de téléphone ou Mac reste à vérifier sur l’appareil de l’utilisateur.

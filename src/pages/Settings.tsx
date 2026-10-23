@@ -40,7 +40,7 @@ export default function Settings() {
       );
       const a = document.createElement("a");
       a.href = url;
-      a.download = `phyrexian-vault-backup-${b.exportedAt.slice(0, 10)}.json`;
+      a.download = `sotm-backup-${b.exportedAt.slice(0, 10)}.json`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       notify("Sauvegarde exportée");
@@ -64,7 +64,7 @@ export default function Settings() {
   return (
     <>
       <PageHead
-        eyebrow="LES FONDATIONS DU VAULT"
+        eyebrow="LES FONDATIONS DE ŠOTM"
         title="Paramètres"
         description="Vos cartes vous appartiennent. Vos données aussi."
       />

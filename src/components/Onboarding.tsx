@@ -48,9 +48,7 @@ function Welcome({ initial }: { initial: Preferences }) {
     <div className="onboarding">
       <div className="onboarding-brand">
         <img src={logo} alt="" />
-        <span>
-          PHYREXIAN <b>VAULT</b>
-        </span>
+        <span>šotm</span>
       </div>
       <main
         className="onboarding-panel panel"
@@ -73,7 +71,7 @@ function Welcome({ initial }: { initial: Preferences }) {
           <h1 ref={heading} tabIndex={-1}>
             {
               [
-                "Bienvenue dans le Vault.",
+                "Bienvenue chez šotm.",
                 "Entre ombre et porcelaine.",
                 "La valeur de votre archive.",
                 "Chaque carte a sa langue.",
@@ -213,7 +211,7 @@ function Welcome({ initial }: { initial: Preferences }) {
             </Button>
           ) : (
             <Button disabled={busy} onClick={() => void finish()}>
-              {busy ? "Ouverture…" : "Ouvrir mon Vault"}
+              {busy ? "Ouverture…" : "Ouvrir šotm"}
               <ArrowRight size={16} />
             </Button>
           )}
@@ -231,7 +229,7 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
     return (
       <div className="vault-loading" role="status">
         <img src={logo} alt="" />
-        Ouverture du Vault…
+        Ouverture de šotm…
       </div>
     );
   return p.onboardingCompleted ? <>{children}</> : <Welcome initial={p} />;

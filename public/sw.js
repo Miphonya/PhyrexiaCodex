@@ -1,5 +1,6 @@
 /* Same-origin application shell only. Personal data stays in IndexedDB. */
-const CACHE = "phyrexian-shell-v1";
+const CACHE = "sotm-shell-v2";
+const OCR_CACHE = "sotm-ocr-v1";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
@@ -10,7 +11,13 @@ self.addEventListener("install", (event) => {
       const assets = [
         ...html.matchAll(/(?:src|href)="([^"]*assets\/[^"]+)"/g),
       ].map((m) => m[1]);
-      await c.addAll(["./", "./index.html", "./logo.svg", ...assets]);
+      await c.addAll([
+        "./",
+        "./index.html",
+        "./logo.svg",
+        "./favicon.svg",
+        ...assets,
+      ]);
     })(),
   );
   self.skipWaiting();
@@ -22,7 +29,12 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((k) => k.startsWith("phyrexian-shell-") && k !== CACHE)
+            .filter(
+              (k) =>
+                (k.startsWith("phyrexian-shell-") ||
+                  k.startsWith("sotm-shell-")) &&
+                k !== CACHE,
+            )
             .map((k) => caches.delete(k)),
         ),
       )
@@ -35,17 +47,19 @@ self.addEventListener("fetch", (event) => {
     return;
   event.respondWith(
     (async () => {
-      const cache = await caches.open(CACHE);
+      const isOCR = url.pathname.includes("/ocr/");
+      const cache = await caches.open(isOCR ? OCR_CACHE : CACHE);
       try {
         const response = await fetch(event.request);
         if (
           response.ok &&
           (event.request.mode === "navigate" ||
-            url.pathname.includes("/assets/"))
+            url.pathname.includes("/assets/") ||
+            isOCR)
         ) {
           await cache.put(event.request, response.clone());
           const keys = await cache.keys();
-          if (keys.length > 50) await cache.delete(keys[0]);
+          if (keys.length > (isOCR ? 12 : 50)) await cache.delete(keys[0]);
         }
         return response;
       } catch {
