@@ -1,6 +1,6 @@
 # šotm
 
-Gestionnaire personnel de cartes Magic: The Gathering, statique, local-first et sans compte. Interface française inspirée de la porcelaine et des architectures biomécaniques, sous le nom humain **šotm**, avec l’emblème original et le nom phyrexian composé avec la police fournie (`public/fonts/PhrexianRev4.otf`). Le caractère š utilise le glyphe sh.liga de la police ; le nom accessible et le remplacement en cas d’échec de chargement restent **šotm**.
+Gestionnaire personnel de cartes Magic: The Gathering, statique, local-first et sans compte. Interface française inspirée de la porcelaine et des architectures biomécaniques, sous le nom humain **šotm**, avec l’emblème original et le nom phyrexian affiché en image (`public/wordmark.svg`), comme avant l’essai de police. Ce SVG est l’adaptation vectorielle précédemment utilisée, et non le fichier image original joint. Le nom accessible et le remplacement en cas d’image indisponible restent **šotm**.
 
 ## Développement
 
@@ -110,25 +110,14 @@ Le changement de nom conserve volontairement l’identifiant IndexedDB historiqu
 
 Le parcours navigateur a exécuté le vrai moteur sur l’image non modifiée d’Elesh Norn, identifié son nom, puis testé la correction et la recherche réelle Scryfall avant ajout explicite. La lecture a été répétée avec succès hors ligne après rechargement. Le test a aussi vérifié les trois méthodes, leur persistance, l’arrêt d’une caméra simulée et le fonctionnement sous `/PhyrexiaCodex/`. Une caméra physique de téléphone ou Mac reste à vérifier sur l’appareil de l’utilisateur.
 
-## Reconnaissance Base / + et confidentialité
+## Capture photo en pause
 
-**Base** est le comportement par défaut, gratuit côté application et sans clé : OCR Tesseract dans le navigateur. La photo reste sur l’appareil. Le service Scryfall reçoit uniquement les champs de recherche que l’utilisateur valide. Une explication apparaît au premier usage de la photo, dans la cinquième étape de l’onboarding et dans les paramètres.
+La capture caméra, l’import photo, l’OCR et le mode + ne sont plus accessibles dans l’interface. Aucun réglage de clé ou de fournisseur n’est affiché. L’ajout propose uniquement « Par nom » et « Par lot », avec mémorisation de la dernière méthode. Une ancienne préférence « photo » ouvre désormais « Par nom » sans modifier les lots existants. Les modules de reconnaissance restent dans les sources pour une éventuelle reprise, mais ne sont plus importés par les pages.
 
-**+** est optionnel : analyse de l’image complète avec Google Gemini (`gemini-flash-latest`, choix initial) ou OpenAI Responses (`gpt-4.1-mini`). Un quota gratuit Gemini peut être disponible selon modèle, compte, région et conditions en vigueur ; aucune gratuité ni disponibilité permanente n’est garantie. Consulter les [tarifs officiels](https://ai.google.dev/gemini-api/docs/pricing) et [Google AI Studio](https://aistudio.google.com/apikey). Les conditions de traitement des photos peuvent différer entre offres gratuites et payantes.
-
-La clé personnelle reste uniquement en mémoire dans l’onglet : ni IndexedDB, ni localStorage, ni sauvegarde, ni dépôt. Recharger, oublier la clé ou changer de fournisseur la supprime. L’activation ne valide pas la clé et ne déclenche aucun appel fournisseur.
-
-Dans Photo, la lecture locale reste automatique. Le mode + demande une confirmation pour chaque photo avant envoi au fournisseur choisi. Les requêtes vont exclusivement à `generativelanguage.googleapis.com` (clé dans `x-goog-api-key`) ou `api.openai.com` (Authorization), sans cookies ni redirection. La clé ne figure pas dans l’URL ni dans le contenu destiné au modèle. OpenAI utilise `store: false`, sans garantie d’absence de rétention selon ses conditions. La collection complète n’est jamais transmise. Les réponses structurées restent des suggestions à vérifier. Aucun appel réel à ces fournisseurs n’a été validé avec une clé personnelle pendant le développement ; les contrats et erreurs sont testés avec des réponses simulées.
-
-Une autre piste entièrement locale est le [Magic Card Detector de T. Mikonen](https://tmikonen.github.io/quantitatively/2020-01-01-magic-card-detector/) : segmentation OpenCV, correction de perspective puis comparaison d’empreintes perceptuelles pré-calculées. Son prototype Python se limite au catalogue Alpha ; il n’est pas intégré à cette application. Une adaptation navigateur nécessiterait un catalogue de référence et des essais sur photos réelles, rééditions, reflets et cadrages variés.
-
-
-Une clé utilisée dans une app statique reste accessible au navigateur de son utilisateur ; il n’est pas possible de la cacher au code qui l’utilise. Cette fonctionnalité est donc réservée à une instance de confiance avec une clé personnelle, et non à une clé partagée publiée dans le frontend. Les clés ne doivent jamais être collées dans le dépôt ni dans les messages de chat.
-
-Les tests ont vérifié le contrat de requête et les erreurs sans fuite de clé, ainsi que le consentement dans un navigateur avec une réponse fournisseur simulée. L’appel réel au fournisseur n’a pas été testé faute de clé personnelle. Les traitements OCR locaux et les requêtes Scryfall ont été validés avec les vraies données.
+Scryfall fournit le catalogue et les prix ; seules les recherches nécessaires lui sont transmises. La collection et les réglages restent dans IndexedDB. Les vérifications de cette révision couvrent les extensions et la recherche réelle d’Elesh Norn, les deux méthodes d’ajout et le rendu entre 320 et 1 440 pixels. Le signalement de connexion Scryfall n’a pas pu être reproduit dans cet environnement.
 
 ## Mobile et réinitialisation
 
-L’interface mobile privilégie les zones tactiles, des champs de taille lisible sans zoom forcé, un en-tête compact, une navigation basse flottante avec marges de zone sûre, des extensions présentées en cartes horizontales et des dialogues en panneaux bas. Dans Toutes mes cartes, la gestion détaillée des lots reste accessible dans « Gérer mes exemplaires » pour laisser la grille au premier plan. Le nom phyrexian et l’ancien emblème sont des éléments distincts ; la police fournie remplace désormais l’image du nom.
+L’interface mobile privilégie les zones tactiles, des champs de taille lisible sans zoom forcé, un en-tête compact, une navigation basse flottante avec marges de zone sûre, des extensions présentées en cartes horizontales et des dialogues en panneaux bas. Dans Toutes mes cartes, la gestion détaillée des lots reste accessible dans « Gérer mes exemplaires » pour laisser la grille au premier plan. Le nom phyrexian et l’ancien emblème sont des éléments distincts ; l’image du nom remplace l’essai de police.
 
 Les paramètres permettent de réinitialiser la collection locale. Le dialogue propose d’abord un export JSON et exige une confirmation explicite avant l’effacement. Une transaction supprime lots (y compris Trade), catalogue, réponses API et préférences ; la clé de l’onglet et les données de requêtes en mémoire sont aussi oubliées. Le cache OCR est nettoyé lorsque le navigateur le permet, mais le shell statique est conservé pour pouvoir afficher l’onboarding même hors ligne. L’onboarding recommence ensuite. Les autres appareils et le compte API du fournisseur ne sont pas modifiés ; une clé oubliée par l’app n’est pas révoquée chez le fournisseur.

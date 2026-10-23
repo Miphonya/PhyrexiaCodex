@@ -80,7 +80,7 @@ function Welcome({ initial }: { initial: Preferences }) {
                 "Entre ombre et porcelaine.",
                 "La valeur de votre archive.",
                 "Chaque carte a sa langue.",
-                "Vos photos. Votre choix.",
+                "Votre collection. Chez vous.",
               ][step]
             }
           </h1>
@@ -199,27 +199,9 @@ function Welcome({ initial }: { initial: Preferences }) {
           )}
           {step === 4 && (
             <>
-              <p>
-                <strong>Base locale, sans clé.</strong> La lecture OCR
-                français/anglais se fait sur votre appareil. Vos photos ne sont
-                pas envoyées à un service de reconnaissance.
-              </p>
-              <div className="onboarding-promise">
-                <ShieldCheck size={22} />
-                <p>
-                  Le mode + est facultatif. Il nécessite votre clé personnelle,
-                  saisie dans les paramètres pour la session uniquement, et une
-                  confirmation avant chaque envoi de photo au fournisseur choisi
-                  : Gemini ou OpenAI.
-                </p>
-              </div>
-              <p className="muted">
-                Le service externe peut être payant et ses conditions
-                s’appliquent. La clé n’est jamais incluse dans le code ou les
-                sauvegardes. La collection reste locale ; seule la photo que
-                vous choisissez d’analyser est envoyée. Vous pouvez rester
-                entièrement en mode Base.
-              </p>
+              <p><strong>Votre collection reste confidentielle, chez vous.</strong> Vos exemplaires et réglages sont enregistrés dans ce navigateur, sans compte.</p>
+              <div className="onboarding-promise"><ShieldCheck size={22} /><p>Scryfall fournit les cartes et leurs prix. Seules les recherches nécessaires au catalogue lui sont transmises.</p></div>
+              <p className="muted">Exportez régulièrement une sauvegarde depuis les paramètres pour conserver votre collection si les données du navigateur sont effacées.</p>
             </>
           )}
         </div>

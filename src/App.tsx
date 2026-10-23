@@ -41,7 +41,7 @@ export default function App() {
   }, []);
   const links = [
     { to: "/", label: "Collection", icon: Layers3 },
-    { to: "/add", label: "Ajouter / Scanner", icon: ScanLine },
+    { to: "/add", label: "Ajouter", icon: ScanLine },
     { to: "/trade", label: "Trade", icon: ArrowLeftRight },
     { to: "/settings", label: "Paramètres", icon: Settings2 },
   ];
@@ -64,7 +64,7 @@ export default function App() {
               <span>
                 {to === "/add" ? (
                   <>
-                    <span className="nav-desktop-label">Ajouter / Scanner</span>
+                    <span className="nav-desktop-label">Ajouter</span>
                     <span className="nav-mobile-label">Ajouter</span>
                   </>
                 ) : (

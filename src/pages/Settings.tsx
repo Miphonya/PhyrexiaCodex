@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { RecognitionSettings } from "../components/RecognitionSettings";
 import { resetAppData } from "../services/reset";
 import { useVisionSession } from "../stores/vision";
 import { LanguageSettings } from "../components/LanguageSettings";
@@ -79,7 +78,6 @@ export default function Settings() {
       <section className="settings-grid">
         <CurrencySettings />
         <LanguageSettings />
-        <RecognitionSettings />
         <div className="panel setting">
           <ShieldCheck />
           <h2>Local, par nature</h2>
