@@ -74,7 +74,9 @@ function Welcome({ initial }: { initial: Preferences }) {
           <h1 ref={heading} tabIndex={-1}>
             {
               [
-                "Bienvenue chez šotm.",
+                <>
+                  Gloire à <BrandName />
+                </>,
                 "Entre ombre et porcelaine.",
                 "La valeur de votre archive.",
                 "Chaque carte a sa langue.",
@@ -91,11 +93,16 @@ function Welcome({ initial }: { initial: Preferences }) {
               </p>
               <div className="onboarding-promise">
                 <ShieldCheck size={22} />
-                <p>
-                  Sans compte. Sans serveur pour vos données.
-                  <br />
-                  Votre collection reste dans ce navigateur.
-                </p>
+                <div>
+                  <strong>
+                    Votre collection reste confidentielle, chez vous.
+                  </strong>
+                  <p>
+                    Sans compte. Sans serveur de collection.
+                    <br />
+                    Enregistrée uniquement dans ce navigateur, sur cet appareil.
+                  </p>
+                </div>
               </div>
               <p className="muted">
                 Quelques choix pour commencer, modifiables à tout moment dans
@@ -202,7 +209,8 @@ function Welcome({ initial }: { initial: Preferences }) {
                 <p>
                   Le mode + est facultatif. Il nécessite votre clé personnelle,
                   saisie dans les paramètres pour la session uniquement, et une
-                  confirmation avant chaque envoi de photo à OpenAI.
+                  confirmation avant chaque envoi de photo au fournisseur choisi
+                  : Gemini ou OpenAI.
                 </p>
               </div>
               <p className="muted">
@@ -239,7 +247,13 @@ function Welcome({ initial }: { initial: Preferences }) {
             </Button>
           ) : (
             <Button disabled={busy} onClick={() => void finish()}>
-              {busy ? "Ouverture…" : "Ouvrir šotm"}
+              {busy ? (
+                "Ouverture…"
+              ) : (
+                <>
+                  Ouvrir <BrandName />
+                </>
+              )}
               <ArrowRight size={16} />
             </Button>
           )}

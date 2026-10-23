@@ -3171,3 +3171,124 @@ footer > span > img {
     padding-bottom: calc(24px + env(safe-area-inset-bottom));
   }
 }
+@font-face {
+  font-family: SotmPhyrexian;
+  src: url("../public/fonts/PhrexianRev4.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.brand-name {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  color: var(--porcelain);
+  font-size: 29px;
+  line-height: 1;
+}
+.phyrexian-name {
+  font-family: SotmPhyrexian, serif;
+  font-weight: 400;
+  font-style: normal;
+  font-synthesis: none;
+  font-size: 1.35em;
+  line-height: 1;
+  font-feature-settings: "liga" 1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.human-name {
+  font-family: var(--font-title);
+  font-size: 1em;
+  letter-spacing: 0.02em;
+}
+.brand .brand-name {
+  font-size: 35px;
+}
+.header-brand .brand-name {
+  font-size: 25px;
+}
+.onboarding-brand .brand-name {
+  font-size: 42px;
+}
+.onboarding-content h1 .brand-name {
+  font-size: 1em;
+  margin-left: 0.08em;
+}
+.onboarding-content h1 .phyrexian-name {
+  font-size: 1.35em;
+}
+.onboarding-actions .brand-name {
+  font-size: 17px;
+}
+.onboarding-actions .phyrexian-name {
+  font-size: 1.5em;
+  line-height: 0.65;
+}
+.onboarding-promise > div {
+  min-width: 0;
+}
+.onboarding-promise strong {
+  display: block;
+  color: var(--text-primary);
+  font-family: var(--font-title);
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1.4;
+  margin-bottom: 9px;
+  text-wrap: balance;
+}
+.onboarding-promise > div > p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+@media (max-width: 760px) {
+  .topbar .brand-name {
+    font-size: 22px;
+  }
+  .onboarding-brand .brand-name {
+    font-size: 38px;
+  }
+  .onboarding-content h1 {
+    line-height: 1.3;
+  }
+  .onboarding-promise {
+    align-items: flex-start;
+  }
+  .onboarding-promise > svg {
+    margin-top: 4px;
+  }
+  .onboarding-promise strong {
+    font-size: 23px;
+  }
+  .onboarding-promise > div > p {
+    font-size: 12px;
+  }
+  .onboarding-actions .brand-name {
+    font-size: 16px;
+  }
+}
+.provider-info {
+  margin: 18px 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 4px 12px 4px 12px;
+  background: var(--background);
+}
+.provider-links {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.provider-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--porcelain);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

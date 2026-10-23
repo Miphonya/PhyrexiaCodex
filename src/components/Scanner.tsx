@@ -1,6 +1,6 @@
 import { usePreferences } from "./CollectionShared";
 import { updatePrefs } from "../db";
-import { useVisionSession } from "../stores/vision";
+import { useVisionSession, providerLabels } from "../stores/vision";
 import { identifyWithVision } from "../services/vision";
 import { Modal } from "./ui/dialog";
 import { Camera, ImagePlus, ScanText, Square, RotateCcw } from "lucide-react";
@@ -12,6 +12,8 @@ import type { OCRProgress } from "../services/ocr";
 export function Scanner() {
   const preferences = usePreferences();
   const apiKey = useVisionSession((s) => s.apiKey);
+  const provider = useVisionSession((s) => s.provider);
+  const providerName = providerLabels[provider];
   const [source, setSource] = useState<"local" | "plus">("local"),
     [plusConfirm, setPlusConfirm] = useState(false);
   const video = useRef<HTMLVideoElement>(null),
@@ -161,7 +163,12 @@ export function Scanner() {
     setQuery("");
     setProgress({ label: "Analyse visuelle +", progress: 0 });
     try {
-      const result = await identifyWithVision(photo, apiKey, aborter.signal);
+      const result = await identifyWithVision(
+        photo,
+        apiKey,
+        aborter.signal,
+        provider,
+      );
       if (mounted.current && id === requestId.current) {
         setName(result.name);
         setSet(result.set);
@@ -240,8 +247,8 @@ export function Scanner() {
             <strong>Base locale :</strong> OCR sur votre appareil, aucune clé
             nécessaire. <strong>Mode + facultatif :</strong> ajoutez votre clé
             personnelle dans les paramètres, puis confirmez chaque envoi de
-            photo à OpenAI. Le service peut être payant ; la clé reste
-            uniquement en mémoire jusqu’au rechargement.
+            photo au fournisseur choisi (Gemini ou OpenAI). Le service peut être
+            payant ; la clé reste uniquement en mémoire jusqu’au rechargement.
           </p>
           <Button
             variant="outline"
@@ -323,7 +330,7 @@ export function Scanner() {
                   />
                   <p>
                     {source === "plus"
-                      ? "Photo transmise à OpenAI à votre demande…"
+                      ? `Photo transmise à ${providerName} à votre demande…`
                       : `${progress.progress} % · Le premier chargement peut prendre quelques secondes.`}
                   </p>
                   <Button variant="outline" onClick={cancel}>
@@ -431,8 +438,8 @@ export function Scanner() {
         <p className="scanner-privacy">
           En mode Base, votre photo reste sur cet appareil. Les champs validés
           sont envoyés à Scryfall pour rechercher une impression. Le mode +
-          n’envoie la photo à OpenAI qu’après votre confirmation. La photo n’est
-          pas conservée par šotm.
+          n’envoie la photo au fournisseur choisi qu’après votre confirmation.
+          La photo n’est pas conservée par šotm.
         </p>
       </section>
       {plusConfirm && (
@@ -441,18 +448,18 @@ export function Scanner() {
           onClose={() => setPlusConfirm(false)}
         >
           <p>
-            Cette photo sera transmise à OpenAI avec votre clé personnelle pour
-            identifier la carte. Le fournisseur peut facturer cet appel et ses
-            conditions de traitement s’appliquent. Votre collection complète
-            n’est pas envoyée. La proposition devra être vérifiée avant tout
-            ajout.
+            Cette photo sera transmise à {providerName} avec votre clé
+            personnelle pour identifier la carte. Le fournisseur peut facturer
+            cet appel et ses conditions de traitement s’appliquent. Votre
+            collection complète n’est pas envoyée. La proposition devra être
+            vérifiée avant tout ajout.
           </p>
           <div className="actions">
             <Button variant="outline" onClick={() => setPlusConfirm(false)}>
               Rester en local
             </Button>
             <Button onClick={() => void analyzeVisual()}>
-              Envoyer cette photo à OpenAI
+              Envoyer cette photo à {providerName}
             </Button>
           </div>
         </Modal>
