@@ -139,7 +139,7 @@ export default function App() {
           </Routes>
           <footer>
             <span>
-              <img src={logo} alt="" /> FAÇONNÉ POUR LES COLLECTIONNEURS
+              <img src={logo} alt="" /> glory to pherexia !
             </span>
             <span>
               Données et images :{" "}
