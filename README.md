@@ -163,3 +163,13 @@ L’import par liste accepte le nom anglais canonique, le nom français officiel
 Une corbeille sur chaque deck à l’accueil et le bouton Supprimer le deck en haut de sa page ouvrent une confirmation. La suppression retire uniquement le deck et ses cartes comptées optionnellement ; les lots saisis directement dans la collection sont conservés.
 
 Les échanges utilisent en priorité l’extension et le numéro des métadonnées Scryfall de l’impression, plutôt qu’un ancien numéro éventuellement incorrect dans un lot. Les cartes à deux noms restent un seul exemplaire. Chaque proposition automatique affiche le total de l’impression et le détail des lots concernés ; un marquage manuel est explicitement identifié. La navigation principale est Collection → Decks → Échanges → Scan, avec Paramètres séparé en bas sur ordinateur et conservé dans la navigation mobile.
+
+## Sélection et modification en masse
+
+Dans Toutes mes cartes et le catalogue d’une extension, « Sélectionner des cartes » active les cases de sélection sur les impressions possédées. Cliquer sur une image sélectionne ou désélectionne aussi la carte. « Tout sélectionner (cartes affichées) » respecte les filtres ; les cartes sélectionnées puis masquées restent sélectionnées et leur nombre est indiqué. Les cartes manquantes ne sont pas sélectionnables.
+
+« Modifier la sélection » ouvre un aperçu des impressions, du nombre de lots de collection et, si leur comptage est activé, des entrées de decks concernées. Seuls les champs cochés changent : langue, finition, état, quantité par lot/entrée, signature, altération et notes. L’échange manuel est disponible uniquement si l’automatisation est désactivée et ne concerne pas les decks. Les autres caractéristiques restent intactes. Une quantité réduite borne les anciennes quantités d’échange manuelles.
+
+Les validations de toutes les sources précèdent les écritures dans une transaction IndexedDB : une finition indisponible, une quantité de commandant différente de un ou une quantité d’échange excessive annule toute l’opération. Les modifications d’entrées de decks ne créent aucun lot supplémentaire. Les cartes supprimées entre l’ouverture du formulaire et son application ne sont pas recréées.
+
+Après suppression d’un lot depuis la fiche d’une carte, la confirmation et la fenêtre de gestion parent se ferment ensemble, sans fond superposé ni blocage de la navigation. Dans la gestion des lots affichée directement sur la page, seule la confirmation se ferme.

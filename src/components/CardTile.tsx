@@ -10,8 +10,12 @@ export function CardTile({
   imageAction,
   missing = false,
   finish = "nonfoil",
+  selectionMode = false,
+  selection,
 }: {
   card: Card;
+  selectionMode?: boolean;
+  selection?: { selected: boolean; onToggle: () => void };
   quantity?: number;
   missing?: boolean;
   finish?: Lot["finish"];
@@ -25,9 +29,9 @@ export function CardTile({
   const [failed, setFailed] = useState(false);
   const src = imageUrl(card, face);
   return (
-    <article className={"card-tile" + (missing ? " is-missing" : "")}>
+    <article className={"card-tile" + (missing ? " is-missing" : "") + (selection?.selected ? " is-selected" : "")}>
       <div className="card-art">
-        <button type="button" className="card-image-button" aria-label={imageAction ?? "Ajouter " + card.name} onClick={onImageClick}>
+        <button type="button" className="card-image-button" disabled={selectionMode && !selection} aria-label={selectionMode ? (selection?.selected ? "Désélectionner " : "Sélectionner ") + card.name : imageAction ?? "Ajouter " + card.name} onClick={selectionMode ? selection?.onToggle : onImageClick}>
         {src && !failed ? (
           <img
             src={src}
@@ -42,6 +46,7 @@ export function CardTile({
           </div>
         )}
         </button>
+        {selection && <label className="card-select-control"><input type="checkbox" aria-label={"Sélection de " + card.name + " " + card.set.toUpperCase() + " #" + card.collector_number} checked={selection.selected} onChange={selection.onToggle} /></label>}
         {missing && <span className="missing-label">Manquante</span>}
         <span className="price" title={price.source}>
           {pricing.format(price.amount)}
@@ -68,13 +73,13 @@ export function CardTile({
             · {quantity} possédée{quantity > 1 ? "s" : ""}
           </b>
         </span>
-        <button
+        {!selectionMode && <button
           className="add-card"
           aria-label={"Ajouter " + card.name}
           onClick={onAdd}
         >
           <Plus size={18} />
-        </button>
+        </button>}
       </div>
     </article>
   );

@@ -16,9 +16,11 @@ import { useUI } from "../stores/ui";
 export default function LotsPanel({
   tradeOnly = false,
   cardId,
+  onDeleted,
 }: {
   tradeOnly?: boolean;
   cardId?: string;
+  onDeleted?: () => void;
 }) {
   const pricing = usePricing();
   const physical = usePhysicalLots();
@@ -38,6 +40,7 @@ export default function LotsPanel({
   const [condition, setCondition] = useState("all");
   const [set, setSet] = useState("all");
   const [edit, setEdit] = useState<{ card: Card; lot: Lot } | null>(null);
+  const [deleting, setDeleting] = useState(false), [deleteError, setDeleteError] = useState("");
   const [remove, setRemove] = useState<Lot | null>(null);
   const [merge, setMerge] = useState<[Lot, Lot] | null>(null);
   const lots = all.filter(
@@ -189,7 +192,7 @@ export default function LotsPanel({
           );
         })}
       </div>
-      {!tradeOnly && deckLots.length > 0 && <div className="deck-origin-lots"><h3>Exemplaires comptés depuis les decks</h3><p className="muted">Leurs quantités et leur retrait se gèrent dans le deck d’origine.</p>{deckLots.filter(l => l.name.toLowerCase().includes(search.toLowerCase()) && (set === "all" || l.set === set)).map(l => <Link key={l.id} to={"/decks/" + l.deckId}><span>{l.quantity} × {l.name}<small>{l.deckName}</small></span><span>Ouvrir le deck →</span></Link>)}</div>}
+      {!tradeOnly && deckLots.length > 0 && <div className="deck-origin-lots"><h3>Exemplaires comptés depuis les decks</h3><p className="muted">Leur gestion individuelle et leur retrait se font dans le deck d’origine.</p>{deckLots.filter(l => l.name.toLowerCase().includes(search.toLowerCase()) && (set === "all" || l.set === set)).map(l => <Link key={l.id} to={"/decks/" + l.deckId}><span>{l.quantity} × {l.name}<small>{l.deckName}</small></span><span>Ouvrir le deck →</span></Link>)}</div>}
       {!lots.length && !deckLots.length && (
         <Empty
           title={
@@ -203,16 +206,18 @@ export default function LotsPanel({
       )}
       {edit && <LotEditor {...edit} onClose={() => setEdit(null)} />}
       {remove && (
-        <Modal title="Supprimer ce lot ?" onClose={() => setRemove(null)}>
+        <Modal title="Supprimer ce lot ?" onClose={() => { if (!deleting) { setRemove(null); setDeleteError(""); } }}>
           <p>
             Les {remove.quantity} exemplaires de {remove.name} seront
             définitivement retirés.
           </p>
-          <Button
+          {deleteError && <p role="alert" className="error">{deleteError}</p>}
+          <Button disabled={deleting}
             onClick={async () => {
-              await db.lots.delete(remove.id);
-              setRemove(null);
-              notify("Lot supprimé");
+              setDeleting(true); setDeleteError("");
+              try { await db.lots.delete(remove.id); setRemove(null); onDeleted?.(); notify("Lot supprimé"); }
+              catch { setDeleteError("Suppression impossible. Réessayez."); }
+              finally { setDeleting(false); }
             }}
           >
             Confirmer la suppression

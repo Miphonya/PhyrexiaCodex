@@ -1,5 +1,6 @@
-import { Grid2X2, List, Search, SlidersHorizontal } from "lucide-react";
+import { CheckSquare, Grid2X2, List, Search, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
+import { BulkCardEditor } from "./BulkCardEditor";
 import LotsPanel from "./LotsPanel";
 import { Modal } from "./ui/dialog";
 import { CardTile } from "./CardTile";
@@ -20,6 +21,10 @@ export default function CardBrowser({
   showEditionFilter?: boolean;
   manageOwned?: boolean;
 }) {
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selection, setSelection] = useState<Set<string>>(new Set());
+  const [bulkEdit, setBulkEdit] = useState(false);
+  const toggleSelected = (id: string) => setSelection(old => { const next = new Set(old); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   const [managing, setManaging] = useState<Card | null>(null);
   const pricing = usePricing(),
     lots = useLots();
@@ -66,6 +71,9 @@ export default function CardBrowser({
             ? quantity(b.id) - quantity(a.id)
             : a.name.localeCompare(b.name),
     );
+  const selectedCards = cards.filter(card => selection.has(card.id) && quantity(card.id) > 0);
+  const selectable = filtered.filter(card => quantity(card.id) > 0);
+  const hiddenSelected = selectedCards.filter(card => !filtered.some(shown => shown.id === card.id)).length;
   return (
     <>
       <div className="toolbar wrap card-toolbar">
@@ -136,6 +144,7 @@ export default function CardBrowser({
           <SlidersHorizontal size={15} /> Plus de filtres
           {extraCount > 0 ? ` (${extraCount})` : ""}
         </Button>
+        {(manageOwned || markMissing) && <Button variant={selectionMode ? "default" : "outline"} aria-pressed={selectionMode} onClick={() => { setSelectionMode(!selectionMode); setSelection(new Set()); }}><CheckSquare size={17} />{selectionMode ? "Terminer la sélection" : "Sélectionner des cartes"}</Button>}
         <Button
           variant="ghost"
           aria-label={list ? "Vue grille" : "Vue liste"}
@@ -197,6 +206,7 @@ export default function CardBrowser({
           )}
         </div>
       )}
+      {selectionMode && <section className="bulk-selection-bar" aria-label="Actions sur la sélection"><span role="status">{selectedCards.length} carte(s) sélectionnée(s){hiddenSelected ? ` · ${hiddenSelected} masquée(s) par les filtres` : ""}</span><div><Button variant="outline" disabled={!selectable.length} onClick={() => setSelection(old => new Set([...old, ...selectable.map(card => card.id)]))}>Tout sélectionner (cartes affichées)</Button><Button variant="ghost" disabled={!selectedCards.length} onClick={() => setSelection(new Set())}>Tout désélectionner</Button><Button disabled={!selectedCards.length} onClick={() => setBulkEdit(true)}>Modifier la sélection</Button></div></section>}
       <p className="muted result-count">
         {filtered.length} impressions affichées
       </p>
@@ -206,6 +216,8 @@ export default function CardBrowser({
             key={c.id}
             card={c}
             quantity={quantity(c.id)}
+            selectionMode={selectionMode}
+            selection={selectionMode && quantity(c.id) > 0 ? { selected: selection.has(c.id), onToggle: () => toggleSelected(c.id) } : undefined}
             missing={markMissing && quantity(c.id) === 0}
             onAdd={() => setSelected(c)}
             onImageClick={() => (manageOwned || markMissing) && quantity(c.id) > 0 ? setManaging(c) : setSelected(c)}
@@ -220,7 +232,7 @@ export default function CardBrowser({
       )}
       {managing && (
         <Modal title={"Gérer " + managing.name} onClose={() => setManaging(null)}>
-          <LotsPanel cardId={managing.id} />
+          <LotsPanel cardId={managing.id} onDeleted={() => setManaging(null)} />
           <Button variant="outline" onClick={() => {
             setSelected(managing);
             setManaging(null);
@@ -229,6 +241,7 @@ export default function CardBrowser({
           </Button>
         </Modal>
       )}
+      {bulkEdit && <BulkCardEditor cards={selectedCards} onClose={() => setBulkEdit(false)} onSaved={() => { setBulkEdit(false); setSelection(new Set()); setSelectionMode(false); }} />}
       {selected && (
         <LotEditor card={selected} onClose={() => setSelected(null)} />
       )}

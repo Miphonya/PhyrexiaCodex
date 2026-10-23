@@ -3452,3 +3452,29 @@ label.search > input { min-width: 0; flex: 1 1 auto; margin: 0; }
 .trade-explanation summary { cursor: pointer; color: var(--porcelain); }
 .trade-explanation ul { padding-left: 16px; overflow-wrap: anywhere; }
 .trade-explanation a { text-decoration: underline; }
+/* Collection selection stays explicit and keyboard accessible. */
+.card-select-control { position: absolute; top: 3px; left: 3px; z-index: 3; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 8px; background: #0b0b0ddd; cursor: pointer; }
+.card-select-control input { width: 22px; height: 22px; min-height: 22px; margin: 0; padding: 0; accent-color: var(--primary-hover); cursor: pointer; }
+.card-tile.is-selected .card-art { border-color: var(--primary-hover); box-shadow: 0 0 0 2px var(--primary); }
+.card-image-button:disabled { cursor: default; }
+.bulk-selection-bar { position: sticky; top: 12px; z-index: 25; margin: 18px 0 26px; padding: 18px 20px; border: 1px solid var(--porcelain); border-radius: 4px 16px 4px 16px; background: var(--surface-elevated); box-shadow: var(--shadow); }
+.bulk-selection-bar > span { display: block; font-size: 13px; color: var(--porcelain); margin-bottom: 14px; }
+.bulk-selection-bar > div { display: flex; flex-wrap: wrap; gap: 10px; }
+.bulk-selection-bar .button { white-space: normal; line-height: 1.5; }
+.bulk-preview { padding: 14px 0; color: var(--text-muted); font-size: 12px; line-height: 1.7; }
+.bulk-preview summary { cursor: pointer; color: var(--porcelain); }
+.bulk-preview ul { max-height: 160px; overflow: auto; padding-left: 18px; }
+.bulk-edit-fields { display: grid; gap: 16px; margin: 12px 0 26px; }
+.bulk-edit-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: center; padding-top: 15px; border-top: 1px solid var(--border); }
+.bulk-edit-row > label { display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 10px; margin: 0; font-size: 12px; color: var(--text-muted); }
+.bulk-edit-row > label > input { width: 19px; height: 19px; min-height: 19px; margin: 0; padding: 0; flex-shrink: 0; accent-color: var(--primary-hover); }
+.bulk-edit-row > select, .bulk-edit-row > input, .bulk-edit-row > textarea { width: 100%; min-width: 0; }
+.bulk-edit-row > textarea { min-height: 85px; resize: vertical; }
+.bulk-edit-row > :disabled { opacity: .4; }
+@media(max-width:760px) {
+  .bulk-selection-bar { top: calc(78px + env(safe-area-inset-top)); padding: 16px; }
+  .bulk-selection-bar .button { flex: 1 1 130px; }
+  .bulk-edit-row { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .bulk-edit-row > label { min-height: 30px; }
+  .bulk-edit-row > select, .bulk-edit-row > input, .bulk-edit-row > textarea { font-size: 16px; }
+}
