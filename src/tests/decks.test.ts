@@ -5,7 +5,8 @@ import { defaults, type Lot } from "../schemas/models";
 import { db, prefs, updatePrefs, clearCatalog, exportBackup, importBackup } from "../db";
 import { backupSchema } from "../schemas/models";
 import { deckSchema, type Deck, type DeckCard } from "../schemas/decks";
-import { addDeckCard, cardKey, checkBracket, createDeck, loadGameChangers, mutateDeck, normalizeDeckSearch, refreshDeck, validateDeck } from "../services/decks";
+import { addDeckCard, commitDeckList, entryDetails, cardKey, checkBracket, createDeck, loadGameChangers, mutateDeck, normalizeDeckSearch, refreshDeck, validateDeck } from "../services/decks";
+import { prepareList, type ImportRow } from "../services/listImport";
 import { resetAppData } from "../services/reset";
 const card = (name: string, extras: Partial<DeckCard> = {}): DeckCard => ({ id: name, oracle_id: name, name, set: "one", set_name: "ONE", collector_number: "1", rarity: "rare", lang: "en", finishes: ["nonfoil"], type_line: "Creature", color_identity: ["W"], legalities: { commander: "legal", modern: "legal", standard: "legal", vintage: "legal", brawl: "legal" }, prices: { eur: null, eur_foil: null }, ...extras });
 const leader = card("Elesh Norn", { type_line: "Legendary Creature — Phyrexian Praetor" });
@@ -162,4 +163,46 @@ it("le réglage commun est désactivé par défaut, persistant et sauvegardé sa
   expect((await db.decks.toArray())[0].entries).toHaveLength(2);
   const legacyPrefs = { ...defaults } as Record<string, unknown>; delete legacyPrefs.includeDeckCards;
   expect(backupSchema.parse({ ...backup, preferences: legacyPrefs }).preferences.includeDeckCards).toBe(false);
+});
+
+it("conserve les caractéristiques et sépare les variantes d’une impression", async () => {
+  const d = await createDeck("Variantes", "modern"), c = card("Norn", { finishes: ["foil", "nonfoil"] });
+  const details = { language: "ja", finish: "foil" as const, condition: "EX" as const, signed: true, altered: true, notes: "Dédicace" };
+  await addDeckCard(d.id, c, "main", false, details, 2);
+  await addDeckCard(d.id, c, "main", false, { ...details, finish: "nonfoil" }, 1);
+  await addDeckCard(d.id, c, "main", false, details, 1);
+  const stored = (await db.decks.get(d.id))!;
+  expect(stored.entries).toHaveLength(2);
+  expect(stored.entries[0].quantity).toBe(3);
+  expect(stored.entries[0].details).toEqual(details);
+  expect(validateDeck(stored).errors.some(e => e.includes("maximum 4"))).toBe(false);
+  expect(projectCollection([], [], [stored], true).lots[0]).toMatchObject({ language: "ja", finish: "foil", condition: "EX", signed: true, altered: true, notes: "Dédicace" });
+});
+it("les anciennes entrées sans caractéristiques restent lisibles et exportables", async () => {
+  const old = deck(); await db.decks.put(old);
+  expect(entryDetails(old.entries[0])).toMatchObject({ language: "en", finish: "nonfoil", condition: "NM" });
+  expect((await exportBackup()).decks).toHaveLength(1);
+});
+it("l’import de liste deck est atomique, préserve les finitions et empêche un double clic", async () => {
+  const d = await createDeck("Liste", "modern"), c = card("Elesh Norn", { finishes: ["foil", "nonfoil"] });
+  const rows: ImportRow[] = [{ id: crypto.randomUUID(), input: "2 Elesh Norn (ONE) 1 *F*", line: 1, entry: { line: 1, name: c.name, set: "one", collectorNumber: "1", quantity: 2, finish: "foil" }, card: c }];
+  const details = { language: "de", condition: "LP" as const, signed: true, altered: false, notes: "Lot" };
+  expect(await commitDeckList(d.id, rows, "sideboard", details)).toBe(2);
+  expect((await db.decks.get(d.id))?.entries[0]).toMatchObject({ zone: "sideboard", quantity: 2, details: { ...details, finish: "foil" } });
+  await expect(commitDeckList(d.id, rows, "sideboard", details)).rejects.toThrow("déjà");
+  expect((await db.decks.get(d.id))?.entries).toHaveLength(1);
+  expect(await db.lots.count()).toBe(0);
+});
+it("la résolution d’une liste deck ne remplit ni catalogue ni collection", async () => {
+  const c = card("Elesh Norn", { finishes: ["foil"] });
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: [c] }))));
+  const rows = await prepareList("1 Elesh Norn (ONE) 1 *F*", { cacheCards: false });
+  expect(rows[0].error).toBeUndefined(); expect(rows[0].entry?.finish).toBe("foil");
+  expect(await db.cards.count()).toBe(0); expect(await db.lots.count()).toBe(0);
+});
+it("refuse tout un import si une finition est indisponible et garde les données intactes", async () => {
+  const d = await createDeck("Liste invalide", "modern"), c = card("Norn", { finishes: ["nonfoil"] });
+  const rows: ImportRow[] = [{ id: crypto.randomUUID(), input: "1 Norn (ONE) 1 *F*", line: 1, entry: { line: 1, name: c.name, set: "one", collectorNumber: "1", quantity: 1, finish: "foil" }, card: c }];
+  await expect(commitDeckList(d.id, rows, "main", { language: "fr", condition: "NM", signed: false, altered: false, notes: "" })).rejects.toThrow("Finition");
+  expect((await db.decks.get(d.id))?.entries).toEqual([]);
 });

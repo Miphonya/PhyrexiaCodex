@@ -17,6 +17,7 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import { Empty, usePreferences } from "./components/CollectionShared";
 import Add from "./pages/Add";
 import Collection from "./pages/Collection";
+import Trade from "./pages/Trade";
 import Decks from "./pages/Decks";
 import DeckDetail from "./pages/DeckDetail";
 import Owned from "./pages/Owned";
@@ -46,7 +47,7 @@ export default function App() {
     { to: "/", label: "Collection", icon: Layers3 },
     { to: "/add", label: "Ajouter", icon: ScanLine },
     { to: "/decks", label: "Decks", icon: Library },
-    { to: "/trade", label: "Trade", icon: ArrowLeftRight },
+    { to: "/trade", label: "Échanges", icon: ArrowLeftRight },
     { to: "/settings", label: "Paramètres", icon: Settings2 },
   ];
   return (
@@ -124,15 +125,7 @@ export default function App() {
             <Route path="/decks" element={<Decks />} />
             <Route path="/decks/:id" element={<DeckDetail />} />
             <Route path="/add" element={<Add />} />
-            <Route
-              path="/trade"
-              element={
-                <section className="coming-soon" aria-label="Trade">
-                  <img src={logo} alt="" />
-                  <h1>Soon…</h1>
-                </section>
-              }
-            />
+            <Route path="/trade" element={<Trade />} />
             <Route path="/settings" element={<Settings />} />
             <Route
               path="*"

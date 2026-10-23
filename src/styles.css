@@ -3418,3 +3418,26 @@ label.search > input { min-width: 0; flex: 1 1 auto; margin: 0; }
 .deck-origin-lots > a { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
 .deck-origin-lots small { display: block; color: var(--text-muted); margin-top: 7px; }
 @media(max-width:760px) { .deck-collection-setting { padding: 22px 16px; } .deck-collection-setting > .tracked-toggle { width: 100%; line-height: 1.6; } }
+.deck-import-preview { max-height: 270px; overflow: auto; margin-top: 24px; border-top: 1px solid var(--border); }
+.deck-import-preview > div { padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.deck-import-preview strong { font-weight: 500; display: block; overflow-wrap: anywhere; }
+.deck-import-preview small { display: block; color: var(--text-muted); margin-top: 7px; line-height: 1.6; }
+.deck-entry-name small { line-height: 1.6; }
+.modal > label:has(textarea) { display: grid; gap: 10px; margin-bottom: 18px; font-size: 12px; }
+.modal > label > textarea { width: 100%; resize: vertical; }
+.trade-quantity input:disabled { opacity: .8; cursor: default; }
+@media(max-width:760px) { .deck-entry > .button:not(:last-child) { order: 0; margin-left: 0; } .deck-entry-name { flex-basis: calc(100% - 40px); } .deck-entry-quantity { margin-left: auto; } }
+/* Exchange cards keep their details once and stay readable on phones. */
+.trade-grid .card-tile > .card-caption,
+.trade-grid .card-tile > h3,
+.trade-grid .card-tile > .card-footer { display: none; }
+@media(max-width:760px) {
+  .trade-grid { grid-template-columns: minmax(0, 1fr); }
+  .trade-grid .lot { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 14px; padding: 16px; }
+  .trade-grid .lot > .card-tile { grid-column: 1; grid-row: 1 / 4; margin: 0; }
+  .trade-grid .lot > div:not(.actions) { grid-column: 2; grid-row: 1; }
+  .trade-grid .lot > .trade-quantity { grid-column: 2; grid-row: 2; margin: 0; }
+  .trade-grid .lot > .actions { grid-column: 1 / -1; grid-row: 4; margin: 0; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .trade-grid .lot .actions .button { font-size: 12px; padding: 12px; }
+}
+.deck-form .checks label { display: flex; align-items: center; gap: 9px; margin: 0; }

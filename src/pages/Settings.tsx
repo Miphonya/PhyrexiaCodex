@@ -1,3 +1,4 @@
+import { TradeSettings } from "../components/TradeSettings";
 import { DeckCollectionSetting } from "../components/DeckCollectionSetting";
 import { useQueryClient } from "@tanstack/react-query";
 import { resetAppData } from "../services/reset";
@@ -80,6 +81,7 @@ export default function Settings() {
         <CurrencySettings />
         <LanguageSettings />
         <DeckCollectionSetting />
+        <TradeSettings />
         <div className="panel setting">
           <ShieldCheck />
           <h2>Local, par nature</h2>

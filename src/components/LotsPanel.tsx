@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { CardTile } from "../components/CardTile";
-import { Empty, useLots, usePhysicalLots } from "../components/CollectionShared";
+import { Empty, useLots, usePhysicalLots, useTradeLots, usePreferences } from "../components/CollectionShared";
 import { LotEditor } from "../components/LotEditor";
 import { Button } from "../components/ui/button";
 import { Modal } from "../components/ui/dialog";
@@ -20,7 +20,9 @@ export default function LotsPanel({
   cardId?: string;
 }) {
   const pricing = usePricing();
-  const all = usePhysicalLots();
+  const physical = usePhysicalLots();
+  const all = useTradeLots();
+  const p = usePreferences();
   const deckLots = useLots().filter(l => !tradeOnly && l.deckId && (!cardId || l.cardId === cardId));
   const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
   const notify = useUI((s) => s.notify);
@@ -110,7 +112,8 @@ export default function LotsPanel({
                   card={c}
                   quantity={l.quantity}
                   finish={l.finish}
-                  onAdd={() => setEdit({ card: c, lot: l })}
+                  imageAction={"Modifier " + l.name}
+                  onAdd={() => setEdit({ card: c, lot: physical.find(x => x.id === l.id) ?? l })}
                 />
               )}
               <div>
@@ -128,11 +131,13 @@ export default function LotsPanel({
                 </small>
               </div>
               <label className="trade-quantity">
-                Trade
+                Échange
                 <input
                   type="number"
                   min="0"
                   max={l.quantity}
+                  disabled={p.autoTradeDuplicates}
+                  title={p.autoTradeDuplicates ? "Quantité calculée automatiquement" : "Quantité disponible à l’échange"}
                   value={l.trade}
                   onChange={(e) => void updateTrade(l, Number(e.target.value))}
                 />
@@ -141,12 +146,12 @@ export default function LotsPanel({
                 {c && (
                   <Button
                     variant="outline"
-                    onClick={() => setEdit({ card: c, lot: l })}
+                    onClick={() => setEdit({ card: c, lot: physical.find(x => x.id === l.id) ?? l })}
                   >
                     Modifier
                   </Button>
                 )}
-                {tradeOnly ? (
+                {tradeOnly && p.autoTradeDuplicates ? <span className="muted">Doublon · automatique</span> : tradeOnly ? (
                   <Button
                     variant="ghost"
                     onClick={() => void updateTrade(l, 0)}
@@ -182,8 +187,7 @@ export default function LotsPanel({
               : "Aucun lot pour le moment"
           }
         >
-          Attribuez une quantité Trade à un lot depuis l’ajout ou la
-          modification de carte.
+          {tradeOnly && p.autoTradeDuplicates ? "Ajoutez des doublons à la collection : les exemplaires en surplus apparaîtront ici automatiquement. Les cartes des decks restent protégées." : "Attribuez une quantité à l’échange depuis l’ajout ou la modification de carte."}
         </Empty>
       )}
       {edit && <LotEditor {...edit} onClose={() => setEdit(null)} />}

@@ -51,7 +51,7 @@ const normalize = (s: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
-export async function prepareList(text: string): Promise<ImportRow[]> {
+export async function prepareList(text: string, options: { cacheCards?: boolean } = {}): Promise<ImportRow[]> {
   const lines = text
     .split(/\r?\n/)
     .map((input, i) => ({ input, line: i + 1 }))
@@ -98,7 +98,7 @@ export async function prepareList(text: string): Promise<ImportRow[]> {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifiers: identifiers.slice(i, i + 75) }),
       });
-      await db.cards.bulkPut(
+      if (options.cacheCards !== false) await db.cards.bulkPut(
         page.data.map((c) => ({ ...c, fetchedAt: Date.now() })),
       );
       for (const c of page.data) cards.set(key(c.set, c.collector_number), c);

@@ -2,7 +2,6 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 import { Crown, Layers3, Plus, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { DeckCollectionSetting } from "../components/DeckCollectionSetting";
 import { db } from "../db";
 import { PageHead, Empty } from "../components/CollectionShared";
 import { Button } from "../components/ui/button";
@@ -19,7 +18,6 @@ export default function Decks() {
     <PageHead eyebrow="VOS ARSENAUX" title="Les decks" description="Composez. Vérifiez. Perfectionnez. Vos listes, sous votre contrôle.">
       <Button onClick={() => { setCreate(true); setError(""); }}><Plus size={17} />Créer un deck</Button>
     </PageHead>
-    <DeckCollectionSetting />
     <div className="deck-overview-bar">
       <label className="search"><Search size={18} /><input aria-label="Chercher une carte dans tous les decks" placeholder="Dans quel deck se trouve cette carte ?" value={query} onChange={e => setQuery(e.target.value)} /></label>
       <span className="muted">{matching.length} deck{matching.length > 1 ? "s" : ""}{needle ? " contenant cette carte" : " archivés"}</span>
@@ -41,6 +39,6 @@ export default function Decks() {
     {create && <Modal title="Créer un deck" onClose={() => setCreate(false)}><form className="deck-form" onSubmit={async e => {
       e.preventDefault(); setBusy(true); setError("");
       try { const deck = await createDeck(name, format); navigate("/decks/" + deck.id); } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
-    }}><label>Nom du deck<input aria-label="Nom du deck" maxLength={120} value={name} onChange={e => setName(e.target.value)} required placeholder="La perfection incarnée" /></label><label>Format<select aria-label="Format du deck" value={format} onChange={e => setFormat(e.target.value as DeckFormat)}>{Object.entries(formats).map(([id, f]) => <option key={id} value={id}>{f.label}</option>)}</select></label><p className="muted">Le comptage dans la collection suit l’option commune Decks et Paramètres.</p>{error && <p className="error" role="alert">{error}</p>}<Button disabled={busy || !name.trim()} type="submit">Créer</Button></form></Modal>}
+    }}><label>Nom du deck<input aria-label="Nom du deck" maxLength={120} value={name} onChange={e => setName(e.target.value)} required placeholder="La perfection incarnée" /></label><label>Format<select aria-label="Format du deck" value={format} onChange={e => setFormat(e.target.value as DeckFormat)}>{Object.entries(formats).map(([id, f]) => <option key={id} value={id}>{f.label}</option>)}</select></label><p className="muted">Le comptage dans la collection suit le réglage des paramètres.</p>{error && <p className="error" role="alert">{error}</p>}<Button disabled={busy || !name.trim()} type="submit">Créer</Button></form></Modal>}
   </>;
 }

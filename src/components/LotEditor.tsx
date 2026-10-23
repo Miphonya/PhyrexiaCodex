@@ -1,3 +1,5 @@
+import { usePhysicalLots, usePreferences } from "./CollectionShared";
+import { tradeLots } from "../services/trade";
 import { usePricing } from "../hooks/usePricing";
 import { languages } from "../schemas/languages";
 import { useState } from "react";
@@ -16,6 +18,8 @@ export function LotEditor({
   onClose: () => void;
 }) {
   const { defaultLanguage } = usePricing();
+  const p = usePreferences();
+  const physical = usePhysicalLots();
   const now = new Date().toISOString();
   const [value, setValue] = useState<Lot>(
     lot ?? {
@@ -42,6 +46,7 @@ export function LotEditor({
   const notify = useUI((s) => s.notify);
   const change = <K extends keyof Lot>(k: K, v: Lot[K]) =>
     setValue({ ...value, [k]: v });
+  const automaticTrade = tradeLots([...physical.filter(l => l.id !== value.id), value], true, [card]).find(l => l.id === value.id)?.trade ?? 0;
   async function submit(keep: boolean) {
     setBusy(true);
     try {
@@ -87,17 +92,18 @@ export function LotEditor({
               required
               min="1"
               value={value.quantity}
-              onChange={(e) => change("quantity", Number(e.target.value))}
+              onChange={(e) => { const quantity = Number(e.target.value); setValue({ ...value, quantity, trade: Math.min(value.trade, Math.max(0, quantity)) }); }}
             />
           </label>
           <label>
-            Quantité Trade
+            {p.autoTradeDuplicates ? "À l’échange · automatique" : "Quantité à l’échange"}
             <input
               type="number"
               required
               min="0"
               max={value.quantity}
-              value={value.trade}
+              disabled={p.autoTradeDuplicates}
+              value={p.autoTradeDuplicates ? automaticTrade : value.trade}
               onChange={(e) => change("trade", Number(e.target.value))}
             />
           </label>
@@ -150,6 +156,7 @@ export function LotEditor({
             </select>
           </label>
         </div>
+        {p.autoTradeDuplicates && <p className="muted">Un exemplaire de chaque carte est conservé. Les suivants sont automatiquement proposés à l’échange. Ce calcul se désactive dans les paramètres.</p>}
         <div className="checks">
           <label>
             <input

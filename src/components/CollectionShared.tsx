@@ -1,6 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { Database, Layers3, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
+import { tradeLots } from "../services/trade";
 import { projectCollection } from "../services/collectionView";
 import { db } from "../db";
 import { usePricing, useVaultPreferences } from "../hooks/usePricing";
@@ -11,6 +12,12 @@ export function usePreferences() {
 
 export function usePhysicalLots() {
   return useLiveQuery(() => db.lots.toArray(), []) ?? [];
+}
+export function useTradeLots() {
+  const p = usePreferences();
+  const lots = usePhysicalLots();
+  const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
+  return tradeLots(lots, p.autoTradeDuplicates, cards);
 }
 export function useCollectionView() {
   const p = usePreferences();

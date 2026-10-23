@@ -1,3 +1,4 @@
+import { usePreferences } from "./CollectionShared";
 import { usePricing } from "../hooks/usePricing";
 import { languages } from "../schemas/languages";
 import { useState } from "react";
@@ -12,6 +13,7 @@ import { useUI } from "../stores/ui";
 import { Button } from "./ui/button";
 import { Modal } from "./ui/dialog";
 export function ListImporter() {
+  const p = usePreferences();
   const { defaultLanguage } = usePricing();
   const [text, setText] = useState("");
   const [rows, setRows] = useState<ImportRow[]>([]);
@@ -120,7 +122,7 @@ export function ListImporter() {
           <p className="muted">
             Nouveaux lots, non signés et non altérés. Langue des exemplaires :{" "}
             {languages[defaultLanguage]} (réglable dans les paramètres),
-            quantité Trade à zéro. Cette liste ajoute des exemplaires ; elle ne
+            {p.autoTradeDuplicates ? "les doublons seront automatiquement proposés à l’échange." : "quantité d’échange initiale à zéro, modifiable ensuite."} Cette liste ajoute des exemplaires ; elle ne
             remplace pas votre collection.
           </p>
           <Button

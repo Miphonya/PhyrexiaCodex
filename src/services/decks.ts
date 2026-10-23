@@ -1,4 +1,7 @@
-import { db } from "../db";
+import { db, prefs } from "../db";
+import { exemplarSchema, type Exemplar } from "../schemas/exemplar";
+import { deckCardSchema } from "../schemas/decks";
+import type { ImportRow } from "./listImport";
 import { deckSchema, formats, type Deck, type DeckCard, type DeckEntry, type DeckFormat } from "../schemas/decks";
 import { cardTypeLine } from "../schemas/models";
 import { request } from "./scryfall";
@@ -21,7 +24,18 @@ export async function mutateDeck(id: string, change: (deck: Deck) => Deck) {
     return next;
   });
 }
-export async function addDeckCard(id: string, card: DeckCard, zone: DeckEntry["zone"], secondCommander = false) {
+export function entryDetails(entry: Pick<DeckEntry, "card" | "details">): Exemplar {
+  return entry.details ?? {
+    language: entry.card.lang,
+    finish: entry.card.finishes.includes("nonfoil") ? "nonfoil" : entry.card.finishes.includes("foil") ? "foil" : "etched",
+    condition: "NM", signed: false, altered: false, notes: "",
+  };
+}
+const sameDetails = (a: Exemplar, b: Exemplar) => (["language", "finish", "condition", "signed", "altered", "notes"] as const).every(key => a[key] === b[key]);
+export async function addDeckCard(id: string, card: DeckCard, zone: DeckEntry["zone"], secondCommander = false, details?: Exemplar, quantity = 1) {
+  const chosen = exemplarSchema.parse(details ?? { ...entryDetails({ card }), language: (await prefs()).defaultLanguage });
+  if (!card.finishes.includes(chosen.finish)) throw Error("Finition indisponible pour cette impression.");
+  if (zone === "commander" && quantity !== 1) throw Error("Un seul exemplaire par commandant.");
   return mutateDeck(id, d => {
     let entries = [...d.entries];
     if (zone === "commander") {
@@ -29,17 +43,26 @@ export async function addDeckCard(id: string, card: DeckCard, zone: DeckEntry["z
         if (entries.filter(e => e.zone === "commander").length >= 2) throw Error("Deux commandants maximum.");
         if (entries.some(e => e.zone === "commander" && cardKey(e.card) === cardKey(card))) throw Error("Ce commandant est déjà sélectionné.");
       } else entries = entries.filter(e => e.zone !== "commander");
-      // Moving a printing out of the library prevents an accidental duplicate.
-      entries = entries.filter(e => e.zone !== "main" || cardKey(e.card) !== cardKey(card));
+      const existingMain = entries.find(e => e.zone === "main" && e.card.id === card.id && sameDetails(entryDetails(e), chosen));
+      if (existingMain) entries = entries.flatMap(e => e.id !== existingMain.id ? [e] : e.quantity > 1 ? [{ ...e, quantity: e.quantity - 1 }] : []);
     }
-    const existing = entries.find(e => e.card.id === card.id && e.zone === zone);
-    if (existing) entries = entries.map(e => e.id === existing.id ? { ...e, quantity: e.quantity + 1 } : e);
-    else entries.push({ id: crypto.randomUUID(), card, zone, quantity: 1 });
+    const existing = entries.find(e => e.card.id === card.id && e.zone === zone && sameDetails(entryDetails(e), chosen));
+    if (existing) entries = entries.map(e => e.id === existing.id ? { ...e, quantity: e.quantity + quantity } : e);
+    else entries.push({ id: crypto.randomUUID(), card, zone, quantity, details: chosen });
     return { ...d, entries };
   });
 }
+export async function commitDeckList(id: string, rows: ImportRow[], zone: "main" | "sideboard", details: Omit<Exemplar, "finish">) {
+  if (!rows.length || rows.some(row => row.error || !row.entry || !row.card)) throw Error("Corrigez toutes les lignes avant de confirmer.");
+  const incoming = rows.map(row => ({ id: row.id, card: { ...deckCardSchema.parse(row.card), fetchedAt: Date.now() }, quantity: row.entry!.quantity, zone, details: exemplarSchema.parse({ ...details, finish: row.entry!.finish }) }));
+  await mutateDeck(id, d => {
+    if (incoming.some(entry => d.entries.some(old => old.id === entry.id))) throw Error("Cet aperçu a déjà été ajouté. Analysez une nouvelle liste pour un nouvel ajout.");
+    return { ...d, entries: [...d.entries, ...incoming] };
+  });
+  return incoming.reduce((n, entry) => n + entry.quantity, 0);
+}
 export async function searchDeckCards(q: string, next?: string) {
-  return request<{ data: DeckCard[]; next_page?: string }>(next ?? `/cards/search?q=${encodeURIComponent(q + " game:paper")}&unique=cards`);
+  return request<{ data: DeckCard[]; next_page?: string }>(next ?? `/cards/search?q=${encodeURIComponent(q + " game:paper")}&unique=prints`);
 }
 export interface GameChangers { ids: string[]; names: string[]; checkedAt: string }
 export async function loadGameChangers(): Promise<GameChangers> {
