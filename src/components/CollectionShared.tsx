@@ -3,7 +3,7 @@ import { Database, Layers3, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { db, prefs } from "../db";
 import { defaults } from "../schemas/models";
-import { money, scryfallPriceProvider } from "../services/pricing";
+import { usePricing } from "../hooks/usePricing";
 
 export function usePreferences() {
   return useLiveQuery(prefs, []) ?? defaults;
@@ -90,6 +90,7 @@ export function PageHead({
 }
 
 export function Stats() {
+  const pricing = usePricing();
   const lots = useLots();
   const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
   const p = usePreferences();
@@ -97,7 +98,7 @@ export function Stats() {
     missing = 0;
   for (const l of lots) {
     const c = cards.find((c) => c.id === l.cardId);
-    const amount = c ? scryfallPriceProvider.quote(c, l.finish).amount : null;
+    const amount = c ? pricing.quote(c, l.finish).amount : null;
     if (amount === null) missing += l.quantity;
     else value += amount * l.quantity;
   }
@@ -118,11 +119,16 @@ export function Stats() {
         },
         {
           label: "VALEUR INDICATIVE",
-          value: money(value),
+          value: pricing.format(
+            lots.length > 0 &&
+              missing === lots.reduce((n, l) => n + l.quantity, 0)
+              ? null
+              : value,
+          ),
           icon: ShieldCheck,
           note: missing
             ? `${missing} exemplaire(s) sans prix`
-            : "Prix Scryfall · EUR",
+            : `Prix indicatifs · ${pricing.currency}`,
         },
         {
           label: "EXTENSIONS SUIVIES",

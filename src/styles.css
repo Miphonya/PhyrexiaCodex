@@ -1436,3 +1436,158 @@ footer a {
     scroll-behavior: auto !important;
   }
 }
+/* Persistent collection controls and list import */
+.tracked-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.tracked-toggle.is-on {
+  background: var(--surface-elevated);
+  border-color: var(--primary-hover);
+  color: var(--text-primary);
+}
+.switch-track {
+  display: block;
+  width: 32px;
+  height: 18px;
+  border-radius: 20px;
+  background: var(--border);
+  padding: 3px;
+  transition: background var(--duration);
+}
+.switch-track > span {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--porcelain);
+  transition: transform var(--duration);
+}
+.is-on .switch-track {
+  background: var(--primary-hover);
+}
+.is-on .switch-track > span {
+  transform: translateX(14px);
+}
+.card-tile.is-missing .card-art > img {
+  filter: grayscale(1) brightness(0.55);
+  transition: filter var(--duration);
+}
+.missing-label {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  background: #0b0b0de8;
+  color: #e8ded0;
+  border: 1px solid #a69c8c66;
+  padding: 5px 7px;
+  font-size: 9px;
+  border-radius: 4px;
+}
+.privacy select {
+  padding: 7px;
+  min-height: 30px;
+  font-size: 10px;
+  max-width: 155px;
+}
+.list-importer {
+  padding: 26px;
+  margin-bottom: 28px;
+}
+.list-importer h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.list-importer p {
+  font-size: 12px;
+}
+.list-importer > label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 12px 0;
+}
+.list-importer textarea {
+  font-family: ui-monospace, monospace;
+  line-height: 1.9;
+  min-height: 130px;
+}
+.list-importer code {
+  color: var(--porcelain);
+}
+.import-summary {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  margin-top: 24px;
+}
+.import-summary > span {
+  color: var(--text-muted);
+}
+.import-preview {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0;
+  max-height: 340px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.import-preview li {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.import-preview li:last-child {
+  border-bottom: 0;
+}
+.import-preview li.invalid {
+  background: #8f172622;
+}
+.import-preview li p {
+  color: var(--text-primary);
+  margin: 0;
+}
+.import-condition select {
+  display: block;
+  margin-top: 8px;
+  min-width: 110px;
+}
+@media (max-width: 760px) {
+  .privacy {
+    gap: 5px !important;
+  }
+  .privacy > svg {
+    display: none;
+  }
+  .privacy select {
+    max-width: 90px;
+    font-size: 9px;
+  }
+  .topbar > span:first-child b {
+    display: none;
+  }
+  .list-importer {
+    padding: 20px;
+  }
+  .tracked-toggle {
+    font-size: 10px;
+  }
+  .cards-list .missing-label {
+    display: none;
+  }
+}

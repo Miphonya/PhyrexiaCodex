@@ -2,6 +2,7 @@ import Dexie, { type Table } from "dexie";
 import {
   backupSchema,
   defaults,
+  preferencesSchema,
   lotSchema,
   type Backup,
   type Card,
@@ -28,10 +29,20 @@ class VaultDB extends Dexie {
 }
 export const db = new VaultDB();
 export async function prefs() {
-  return (await db.settings.get("preferences"))?.value ?? defaults;
+  return preferencesSchema.parse(
+    (await db.settings.get("preferences"))?.value ?? defaults,
+  );
 }
 export async function savePrefs(value: Preferences) {
-  await db.settings.put({ id: "preferences", value });
+  await db.settings.put({
+    id: "preferences",
+    value: preferencesSchema.parse(value),
+  });
+}
+export async function updatePrefs(changes: Partial<Preferences>) {
+  await db.transaction("rw", db.settings, async () => {
+    await savePrefs({ ...(await prefs()), ...changes });
+  });
 }
 export async function saveLot(lot: Lot) {
   await db.lots.put(lotSchema.parse(lot));

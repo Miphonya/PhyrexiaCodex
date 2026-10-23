@@ -19,13 +19,13 @@ Les tâches cloud utilisent le checkout existant ; aucun worktree supplémentair
 
 Le workflow `.github/workflows/deploy.yml` vérifie les tests et la compilation puis publie `dist` sur GitHub Pages lors d’un push sur `main`. Dans GitHub, sélectionner **Settings → Pages → Source → GitHub Actions**. Aucune publication n’a été effectuée pendant l’implémentation. La base Vite relative et le routage par hash supportent un chemin de dépôt tel que `/PhyrexiaCodex/`.
 
-Ne jamais ajouter de sauvegarde personnelle, de jeton ou de fichier `.env` contenant des secrets au dépôt public. Il n’existe aucun secret requis et aucune clé Cardmarket côté client. Un dépôt public n’expose pas les données IndexedDB des visiteurs. Les appels Scryfall et ses images sont néanmoins des requêtes externes ; ce n’est pas une application dépourvue de toute communication réseau.
+Ne jamais ajouter de sauvegarde personnelle, de jeton ou de fichier `.env` contenant des secrets au dépôt public. Il n’existe aucun secret requis et aucune clé Cardmarket côté client. Un dépôt public n’expose pas les données IndexedDB des visiteurs. Les appels Scryfall, ses images et le taux de change sont néanmoins des requêtes externes ; ce n’est pas une application dépourvue de toute communication réseau.
 
 ## Données et architecture
 
 - `src/schemas/models.ts` : types stricts et validation Zod. Les lots possèdent un UUID stable et des caractéristiques indépendantes : impression Scryfall, langue, finition, état, signature, altération et notes.
 - `src/db` : Dexie/IndexedDB, lots, catalogue, préférences et cache. Le Trade est un champ du lot, jamais une seconde collection.
-- `src/services` : Scryfall indépendant de React, file de requêtes espacées de 120 ms, pagination, reprise limitée des HTTP 429/5xx, cache périssable et fournisseur de prix en EUR.
+- `src/services` : Scryfall indépendant de React, file de requêtes espacées de 120 ms, pagination, reprise limitée des HTTP 429/5xx, cache périssable et fournisseur de prix EUR/USD et conversion CHF datée.
 - `src/pages` : extensions, détail de set, collection globale, ajout assisté et paramètres.
 - `src/components` : composants de collection et de lots, capture caméra, primitives UI shadcn adaptées avec Radix Dialog et CVA.
 - `src/stores` : état UI Zustand ; TanStack Query orchestre le chargement API et Dexie conserve les données.
@@ -49,7 +49,7 @@ Les images utilisent le cache HTTP du navigateur ; elles ne sont pas systématiq
 
 ## API externes et limites
 
-Domaines requis : `api.scryfall.com`, `cards.scryfall.io`, `svgs.scryfall.io`.
+Domaines requis : `api.scryfall.com`, `cards.scryfall.io`, `svgs.scryfall.io` ; `cdn.jsdelivr.net` pour le taux EUR → CHF.
 
 La liste des extensions provient de Scryfall ; le compteur affiche les impressions distinctes possédées rapportées au `card_count` du set, et non le nombre de cartes Oracle uniques. Ce dénominateur peut inclure des variantes ou des produits qui ne figurent pas dans le filtre papier : il s’agit d’un indicateur de catalogue, pas d’une définition universelle de complétion.
 
@@ -65,6 +65,23 @@ Magic: The Gathering et les images de cartes appartiennent à Wizards of the Coa
 
 ### Validation de cette implémentation
 
-Les 15 tests Vitest et la compilation de production ont passé. Un parcours navigateur sur les véritables réponses Scryfall a chargé les 479 impressions papier de ONE (pagination incluse), leurs images, une recherche « Elesh Norn set:one », et la mise à jour des prix via `/cards/collection`. Ajout de trois exemplaires, édition de la quantité Trade, thèmes, export, réimport sans doublon, absence de débordement mobile et rechargement hors ligne de la production ont été vérifiés sans exception JavaScript.
+Les 25 tests Vitest et la compilation de production ont passé. Un parcours navigateur sur les véritables réponses Scryfall a chargé les 479 impressions papier de ONE (pagination incluse), leurs images, une recherche « Elesh Norn set:one », et la mise à jour des prix via `/cards/collection`. Ajout de trois exemplaires, édition de la quantité Trade, thèmes, export, réimport sans doublon, absence de débordement mobile et rechargement hors ligne de la production ont été vérifiés sans exception JavaScript.
 
 Dans la machine cloud, le navigateur automatisé ne fait pas confiance au certificat du proxy. Le parcours réel a donc utilisé un adaptateur de test relayant les requêtes par `curl`, avec validation TLS et certificats système conservés. Les réponses provenaient de Scryfall, sans fixtures. Cet adaptateur ne fait pas partie de l’application ; les visiteurs utilisent directement `fetch` dans leur navigateur. La capture caméra réelle nécessite un appareil et une autorisation utilisateur ; elle n’a pas été validée sur du matériel physique. La publication GitHub Pages reste à effectuer.
+
+## Devises, suivi et ajout par liste
+
+Le sélecteur de la barre supérieure et les paramètres proposent CHF (par défaut), EUR et USD. EUR/USD utilisent les champs Scryfall de la finition demandée ; CHF convertit le prix EUR avec le taux quotidien de la Currency API de Fawaz Ahmed distribuée via jsDelivr. La source, la date et le taux figurent dans les paramètres. Le taux est conservé dans les préférences et dans les sauvegardes ; les données sont rafraîchies au maximum une fois par 24 heures, sauf demande explicite. Hors ligne ou en cas d’erreur, le dernier taux est conservé et son ancienneté signalée. Sans taux ou prix fiable, le résultat est N/A. Les totaux, le filtre de prix et le tri utilisent la devise sélectionnée.
+
+Le bouton « Extensions suivies uniquement » est mémorisé dans IndexedDB : navigation et rechargement ne le réinitialisent pas. Dans le détail d’une extension, les impressions non possédées sont grisées et marquées « Manquante ». Le filtre « Possession » propose toutes, possédées et manquantes.
+
+Dans Ajouter / Scanner, collez une carte par ligne :
+
+```text
+1 The Tale of Tamiyo (DSK) 75 *F*
+2 The Tale of Tamiyo (DSK) 75
+```
+
+`*F*` signifie foil, `*E*` etched ; l’absence de marqueur signifie non-foil. Les astérisques échappés `\*F\*` sont également acceptés. Les impressions sont résolues par extension et numéro en appels groupés de 75 maximum (les impressions anglaises déjà en cache sont réutilisées). L’aperçu vérifie le nom et la disponibilité de la finition. Une erreur bloque tout l’ajout. Choisissez un état commun, puis confirmez : chaque ligne crée un lot avec la langue de l’impression, sans signature ni altération et avec Trade à zéro. Maximum 1 000 lignes par analyse. Une même confirmation ne peut pas être exécutée deux fois ; analyser à nouveau une liste crée volontairement de nouveaux exemplaires. Pour restaurer une sauvegarde sans doublons, utilisez l’import JSON des paramètres.
+
+Les anciennes préférences et sauvegardes version 1 reçoivent automatiquement les nouveaux paramètres par défaut sans effacer la collection.

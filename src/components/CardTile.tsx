@@ -1,21 +1,27 @@
 import { Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { imageUrl, type Card } from "../schemas/models";
-import { money, scryfallPriceProvider } from "../services/pricing";
+import { imageUrl, type Card, type Lot } from "../schemas/models";
+import { usePricing } from "../hooks/usePricing";
 export function CardTile({
   card,
   quantity = 0,
   onAdd,
+  missing = false,
+  finish = "nonfoil",
 }: {
   card: Card;
   quantity?: number;
+  missing?: boolean;
+  finish?: Lot["finish"];
   onAdd: () => void;
 }) {
+  const pricing = usePricing();
+  const price = pricing.quote(card, finish);
   const [face, setFace] = useState(0);
   const [failed, setFailed] = useState(false);
   const src = imageUrl(card, face);
   return (
-    <article className="card-tile">
+    <article className={"card-tile" + (missing ? " is-missing" : "")}>
       <div className="card-art">
         {src && !failed ? (
           <img
@@ -30,8 +36,9 @@ export function CardTile({
             <small>Image indisponible</small>
           </div>
         )}
-        <span className="price">
-          {money(scryfallPriceProvider.quote(card, "nonfoil").amount)}
+        {missing && <span className="missing-label">Manquante</span>}
+        <span className="price" title={price.source}>
+          {pricing.format(price.amount)}
         </span>
         {card.card_faces?.[1]?.image_uris && (
           <button

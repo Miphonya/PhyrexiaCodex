@@ -19,7 +19,7 @@ import {
   usePreferences,
 } from "../components/CollectionShared";
 import { Button } from "../components/ui/button";
-import { db, savePrefs } from "../db";
+import { db, savePrefs, updatePrefs } from "../db";
 import { progress } from "../schemas/models";
 import { scryfallService } from "../services/scryfall";
 const logo = new URL("../../public/logo.svg", import.meta.url).href;
@@ -31,7 +31,7 @@ export default function Collection() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("main");
   const [sort, setSort] = useState("date");
-  const [tracked, setTracked] = useState(false);
+  const tracked = p.onlyTracked;
   const q = useQuery({ queryKey: ["sets"], queryFn: scryfallService.sets });
   const local = useLiveQuery(() => db.sets.toArray(), []) ?? [];
   const sets = q.data ?? local;
@@ -100,14 +100,18 @@ export default function Collection() {
           </h2>
           <p>Explorez le catalogue et suivez votre progression.</p>
         </div>
-        <label className="inline-check">
-          <input
-            type="checkbox"
-            checked={tracked}
-            onChange={(e) => setTracked(e.target.checked)}
-          />{" "}
-          Suivies uniquement
-        </label>
+        <button
+          type="button"
+          className={"tracked-toggle " + (tracked ? "is-on" : "")}
+          role="switch"
+          aria-checked={tracked}
+          onClick={() => void updatePrefs({ onlyTracked: !tracked })}
+        >
+          <span className="switch-track">
+            <span />
+          </span>
+          <span>Extensions suivies uniquement</span>
+        </button>
       </div>
       <div className="toolbar">
         <label className="search">

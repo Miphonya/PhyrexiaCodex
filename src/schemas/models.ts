@@ -23,8 +23,19 @@ export const lotSchema = z
     "Le Trade ne peut pas dépasser la quantité possédée",
   );
 export type Lot = z.infer<typeof lotSchema>;
+export const exchangeRateSchema = z.object({
+  value: z.number().positive().max(10),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  source: z.string(),
+  fetchedAt: z.string().datetime(),
+});
+export type ExchangeRate = z.infer<typeof exchangeRateSchema>;
+export type Currency = "CHF" | "EUR" | "USD";
 export const preferencesSchema = z.object({
   theme: z.enum(["dark", "light"]),
+  currency: z.enum(["CHF", "EUR", "USD"]).default("CHF"),
+  onlyTracked: z.boolean().default(false),
+  exchangeRate: exchangeRateSchema.nullable().default(null),
   tracked: z.array(z.string()),
   metadataDays: z.number().positive(),
   priceHours: z.number().positive(),
@@ -32,6 +43,9 @@ export const preferencesSchema = z.object({
 export type Preferences = z.infer<typeof preferencesSchema>;
 export const defaults: Preferences = {
   theme: "dark",
+  currency: "CHF",
+  onlyTracked: false,
+  exchangeRate: null,
   tracked: [],
   metadataDays: 7,
   priceHours: 24,
@@ -68,7 +82,13 @@ export interface Card {
     name: string;
     image_uris?: { normal: string; small: string };
   }[];
-  prices: { eur: string | null; eur_foil: string | null };
+  prices: {
+    eur: string | null;
+    eur_foil: string | null;
+    usd?: string | null;
+    usd_foil?: string | null;
+    usd_etched?: string | null;
+  };
   fetchedAt?: number;
 }
 export interface SetInfo {

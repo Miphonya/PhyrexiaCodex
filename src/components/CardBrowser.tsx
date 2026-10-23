@@ -5,9 +5,16 @@ import { Empty, useLots } from "../components/CollectionShared";
 import { LotEditor } from "../components/LotEditor";
 import { Button } from "../components/ui/button";
 import { type Card } from "../schemas/models";
-import { scryfallPriceProvider } from "../services/pricing";
+import { usePricing } from "../hooks/usePricing";
 
-export default function CardBrowser({ cards }: { cards: Card[] }) {
+export default function CardBrowser({
+  cards,
+  markMissing = false,
+}: {
+  cards: Card[];
+  markMissing?: boolean;
+}) {
+  const pricing = usePricing();
   const lots = useLots();
   const [name, setName] = useState("");
   const [ownership, setOwnership] = useState("all");
@@ -40,8 +47,7 @@ export default function CardBrowser({ cards }: { cards: Card[] }) {
     )
     .sort((a, b) =>
       sort === "value"
-        ? (scryfallPriceProvider.quote(b, "nonfoil").amount ?? -1) -
-          (scryfallPriceProvider.quote(a, "nonfoil").amount ?? -1)
+        ? (pricing.quote(b).amount ?? -1) - (pricing.quote(a).amount ?? -1)
         : sort === "quantity"
           ? quantity(b.id) - quantity(a.id)
           : sort === "set"
@@ -148,6 +154,7 @@ export default function CardBrowser({ cards }: { cards: Card[] }) {
             key={c.id}
             card={c}
             quantity={quantity(c.id)}
+            missing={markMissing && quantity(c.id) === 0}
             onAdd={() => setSelected(c)}
           />
         ))}

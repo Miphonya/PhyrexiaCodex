@@ -8,7 +8,7 @@ import { Button } from "../components/ui/button";
 import { Modal } from "../components/ui/dialog";
 import { db, saveLot } from "../db";
 import { compatible, type Card, type Lot } from "../schemas/models";
-import { money, scryfallPriceProvider } from "../services/pricing";
+import { usePricing } from "../hooks/usePricing";
 import { useUI } from "../stores/ui";
 
 export default function LotsPanel({
@@ -16,6 +16,7 @@ export default function LotsPanel({
 }: {
   tradeOnly?: boolean;
 }) {
+  const pricing = usePricing();
   const all = useLots();
   const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
   const notify = useUI((s) => s.notify);
@@ -38,7 +39,7 @@ export default function LotsPanel({
       (!maxPrice ||
         (() => {
           const c = cards.find((c) => c.id === l.cardId);
-          const p = c ? scryfallPriceProvider.quote(c, l.finish).amount : null;
+          const p = c ? pricing.quote(c, l.finish).amount : null;
           return p !== null && p <= Number(maxPrice);
         })()),
   );
@@ -46,7 +47,7 @@ export default function LotsPanel({
     unpriced = 0;
   for (const l of lots) {
     const c = cards.find((c) => c.id === l.cardId);
-    const price = c ? scryfallPriceProvider.quote(c, l.finish).amount : null;
+    const price = c ? pricing.quote(c, l.finish).amount : null;
     if (price === null) unpriced++;
     else total += price * (tradeOnly ? l.trade : l.quantity);
   }
@@ -62,7 +63,9 @@ export default function LotsPanel({
       <div className="section-heading">
         <h2>{tradeOnly ? "Disponibles à l’échange" : "Vos lots physiques"}</h2>
         <span className="muted">
-          {money(total)}
+          {pricing.format(
+            lots.length > 0 && unpriced === lots.length ? null : total,
+          )}
           {unpriced > 0 ? ` · ${unpriced} lot(s) sans prix` : ""}
         </span>
       </div>
@@ -112,7 +115,7 @@ export default function LotsPanel({
           className="type-filter"
           type="number"
           min="0"
-          placeholder="Prix max. €"
+          placeholder={"Prix max. " + pricing.currency}
           aria-label="Prix maximal"
           value={maxPrice}
           onChange={(e) => setMaxPrice(e.target.value)}
@@ -130,6 +133,7 @@ export default function LotsPanel({
                 <CardTile
                   card={c}
                   quantity={l.quantity}
+                  finish={l.finish}
                   onAdd={() => setEdit({ card: c, lot: l })}
                 />
               )}
@@ -143,9 +147,7 @@ export default function LotsPanel({
                 {l.notes && <p>{l.notes}</p>}
                 <small>
                   {l.quantity} exemplaire(s) ·{" "}
-                  {money(
-                    c ? scryfallPriceProvider.quote(c, l.finish).amount : null,
-                  )}{" "}
+                  {pricing.format(c ? pricing.quote(c, l.finish).amount : null)}{" "}
                   / exemplaire
                 </small>
               </div>

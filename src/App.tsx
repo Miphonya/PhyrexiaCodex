@@ -1,3 +1,4 @@
+import { CurrencySelect, ExchangeSync } from "./components/CurrencySettings";
 import {
   ArrowLeftRight,
   Check,
@@ -46,6 +47,7 @@ export default function App() {
   ];
   return (
     <div className="app">
+      <ExchangeSync />
       <a href="#main" className="skip-link">
         Aller au contenu
       </a>
@@ -84,6 +86,7 @@ export default function App() {
             LE VAULT <ChevronRight size={12} /> <b>Archive personnelle</b>
           </span>
           <span className="privacy">
+            <CurrencySelect />
             <ShieldCheck size={14} /> Stockage local <i />{" "}
             {online ? "Connecté" : "Hors ligne"}
           </span>

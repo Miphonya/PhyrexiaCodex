@@ -1,3 +1,4 @@
+import { ListImporter } from "../components/ListImporter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -55,6 +56,7 @@ export default function Add() {
         title="Ajouter des cartes"
         description="Trouvez la bonne impression. Conservez chaque détail de vos exemplaires."
       />
+      <ListImporter />
       <Scanner />
       <form
         className="toolbar"

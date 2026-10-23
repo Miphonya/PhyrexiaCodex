@@ -1,3 +1,4 @@
+import { CurrencySettings } from "../components/CurrencySettings";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -67,6 +68,7 @@ export default function Settings() {
         description="Vos cartes vous appartiennent. Vos données aussi."
       />
       <section className="settings-grid">
+        <CurrencySettings />
         <div className="panel setting">
           <ShieldCheck />
           <h2>Local, par nature</h2>
