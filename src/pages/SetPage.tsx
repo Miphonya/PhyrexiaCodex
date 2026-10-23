@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import CardBrowser from "../components/CardBrowser";
-import { PageHead, QueryState } from "../components/CollectionShared";
+import { PageHead, QueryState, useCollectionView } from "../components/CollectionShared";
 import { Button } from "../components/ui/button";
 import { db } from "../db";
 import { scryfallService } from "../services/scryfall";
@@ -15,10 +15,7 @@ export default function SetPage() {
     queryKey: ["set", code],
     queryFn: () => scryfallService.setCards(code),
   });
-  const local = useLiveQuery(
-    () => db.cards.where("set").equals(code).toArray(),
-    [code],
-  );
+  const local = useCollectionView().cards.filter(card => card.set === code);
   const set = useLiveQuery(() => db.sets.get(code), [code]);
   return (
     <>

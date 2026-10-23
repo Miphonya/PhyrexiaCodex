@@ -1,17 +1,17 @@
 import { Layers3, ChevronDown } from "lucide-react";
-import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 import CardBrowser from "../components/CardBrowser";
-import { PageHead, Stats, useLots } from "../components/CollectionShared";
+import { PageHead, Stats, useCollectionView, usePreferences } from "../components/CollectionShared";
 import LotsPanel from "../components/LotsPanel";
 import { Button } from "../components/ui/button";
 import { db } from "../db";
+import { refreshDeck } from "../services/decks";
 import { scryfallService } from "../services/scryfall";
 import { useUI } from "../stores/ui";
 
 export default function Owned() {
-  const lots = useLots();
-  const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
+  const { lots, cards } = useCollectionView();
+  const p = usePreferences();
   const notify = useUI((s) => s.notify);
   const ids = [...new Set(lots.map((l) => l.cardId))];
   const absent = ids.filter((id) => !cards.some((c) => c.id === id));
@@ -20,7 +20,9 @@ export default function Owned() {
     setBusy(true);
     try {
       const n = await scryfallService.refreshOwned();
-      notify(n + " impressions et prix actualisés");
+      const decks = p.includeDeckCards ? await db.decks.toArray() : [];
+      for (const deck of decks) await refreshDeck(deck.id);
+      notify(n + " impressions et " + decks.length + " deck(s) actualisés");
     } catch (e) {
       notify((e as Error).message);
     } finally {

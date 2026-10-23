@@ -5,6 +5,7 @@ import {
   Check,
   ChevronRight,
   Layers3,
+  Library,
   ScanLine,
   Settings2,
   ShieldCheck,
@@ -16,6 +17,8 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import { Empty, usePreferences } from "./components/CollectionShared";
 import Add from "./pages/Add";
 import Collection from "./pages/Collection";
+import Decks from "./pages/Decks";
+import DeckDetail from "./pages/DeckDetail";
 import Owned from "./pages/Owned";
 import SetPage from "./pages/SetPage";
 import Settings from "./pages/Settings";
@@ -42,6 +45,7 @@ export default function App() {
   const links = [
     { to: "/", label: "Collection", icon: Layers3 },
     { to: "/add", label: "Ajouter", icon: ScanLine },
+    { to: "/decks", label: "Decks", icon: Library },
     { to: "/trade", label: "Trade", icon: ArrowLeftRight },
     { to: "/settings", label: "Paramètres", icon: Settings2 },
   ];
@@ -117,6 +121,8 @@ export default function App() {
             <Route path="/" element={<Collection />} />
             <Route path="/sets/:code" element={<SetPage />} />
             <Route path="/cards" element={<Owned />} />
+            <Route path="/decks" element={<Decks />} />
+            <Route path="/decks/:id" element={<DeckDetail />} />
             <Route path="/add" element={<Add />} />
             <Route
               path="/trade"

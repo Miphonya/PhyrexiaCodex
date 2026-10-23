@@ -2,10 +2,11 @@ import { db } from "../db";
 export async function resetAppData() {
   await db.transaction(
     "rw",
-    [db.lots, db.cards, db.sets, db.settings, db.cache],
+    [db.lots, db.decks, db.cards, db.sets, db.settings, db.cache],
     async () => {
       await Promise.all([
         db.lots.clear(),
+        db.decks.clear(),
         db.cards.clear(),
         db.sets.clear(),
         db.settings.clear(),

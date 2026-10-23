@@ -1,8 +1,9 @@
+import { Link } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { CardTile } from "../components/CardTile";
-import { Empty, useLots } from "../components/CollectionShared";
+import { Empty, useLots, usePhysicalLots } from "../components/CollectionShared";
 import { LotEditor } from "../components/LotEditor";
 import { Button } from "../components/ui/button";
 import { Modal } from "../components/ui/dialog";
@@ -19,7 +20,8 @@ export default function LotsPanel({
   cardId?: string;
 }) {
   const pricing = usePricing();
-  const all = useLots();
+  const all = usePhysicalLots();
+  const deckLots = useLots().filter(l => !tradeOnly && l.deckId && (!cardId || l.cardId === cardId));
   const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
   const notify = useUI((s) => s.notify);
   const [search, setSearch] = useState("");
@@ -171,7 +173,8 @@ export default function LotsPanel({
           );
         })}
       </div>
-      {!lots.length && (
+      {!tradeOnly && deckLots.length > 0 && <div className="deck-origin-lots"><h3>Exemplaires comptés depuis les decks</h3><p className="muted">Leurs quantités et leur retrait se gèrent dans le deck d’origine.</p>{deckLots.filter(l => l.name.toLowerCase().includes(search.toLowerCase()) && (set === "all" || l.set === set)).map(l => <Link key={l.id} to={"/decks/" + l.deckId}><span>{l.quantity} × {l.name}<small>{l.deckName}</small></span><span>Ouvrir le deck →</span></Link>)}</div>}
+      {!lots.length && !deckLots.length && (
         <Empty
           title={
             tradeOnly

@@ -35,7 +35,7 @@ Les lots ne sont fusionnés explicitement que si toutes leurs caractéristiques,
 
 ## Sauvegardes
 
-Dans Paramètres, exporter le JSON régulièrement : effacer les données du navigateur, changer d’origine ou d’appareil ne transfère pas la collection. L’export contient le schéma version 1, les lots, les préférences et les extensions suivies ; pas le catalogue ni les images.
+Dans Paramètres, exporter le JSON régulièrement : effacer les données du navigateur, changer d’origine ou d’appareil ne transfère pas la collection. L’export contient le schéma version 1, les lots, les decks, les préférences et les extensions suivies. Les decks embarquent leurs instantanés Scryfall (avec les URL des images), pas les fichiers image ni le catalogue complet.
 
 L’import valide le document entier avant une transaction. La fusion fait un upsert par UUID : un réimport n’additionne pas les quantités et la version avec `updatedAt` le plus récent est conservée. Les lots avec des UUID différents restent distincts. Le remplacement complet nécessite une confirmation explicite. Les métadonnées manquantes après restauration peuvent être récupérées depuis « Toutes mes cartes » ; les lots restent visibles sans ces métadonnées.
 
@@ -55,7 +55,7 @@ La liste des extensions provient de Scryfall ; le compteur affiche les impressio
 
 La recherche supporte la syntaxe Scryfall, l’autocomplétion, les impressions et le chargement des pages suivantes. Les filtres s’appliquent aux résultats chargés. Les lots peuvent indiquer leur langue ; la recherche `lang:fr` permet de choisir explicitement une impression localisée. Les prix sont indicatifs, datés dans le catalogue local, et ne reflètent pas l’état, les signatures ou les altérations. Les prix etched sont indisponibles si Scryfall ne fournit pas de champ EUR adapté. Aucun prix manquant n’est inventé.
 
-La caméra ou une image JPEG/PNG/WebP fournit une photo temporaire à Tesseract.js, exécuté dans un Web Worker local. Les modèles français et anglais sont fournis par le site. Le texte reconnu doit être vérifié et corrigé avant une recherche Scryfall, puis l’impression et l’ajout doivent être confirmés manuellement. Scryfall ne reconnaît aucune image : seuls les champs de recherche validés lui sont envoyés. Le recadrage manuel et un fournisseur Cardmarket officiel ne sont pas intégrés. Il n’y a ni scraping ni synchronisation distante.
+Fonction en pause, conservée dans les sources : une caméra ou une image JPEG/PNG/WebP fournissait une photo temporaire à Tesseract.js, exécuté dans un Web Worker local. Les modèles français et anglais sont fournis par le site. Le texte reconnu doit être vérifié et corrigé avant une recherche Scryfall, puis l’impression et l’ajout doivent être confirmés manuellement. Scryfall ne reconnaît aucune image : seuls les champs de recherche validés lui sont envoyés. Le recadrage manuel et un fournisseur Cardmarket officiel ne sont pas intégrés. Il n’y a ni scraping ni synchronisation distante.
 
 Magic: The Gathering et les images de cartes appartiennent à Wizards of the Coast. Données et images fournies par Scryfall. Application indépendante, non affiliée à ces sociétés.
 
@@ -88,15 +88,15 @@ Les anciennes préférences et sauvegardes version 1 reçoivent automatiquement 
 
 ## Première configuration et interface simplifiée
 
-Au premier lancement de cette version sur un navigateur, cinq étapes présentent le fonctionnement local, permettent de choisir apparence, devise et langue des nouveaux exemplaires, puis expliquent les modes de reconnaissance Base et +. Les choix sont enregistrés ensemble à la dernière étape. Une fois terminé, l’onboarding ne réapparaît pas après un rechargement. Les utilisateurs des versions précédentes passent une fois par ce nouvel accueil en conservant leurs lots et leurs paramètres existants. Importer une ancienne sauvegarde ne relance pas un onboarding déjà terminé.
+Au premier lancement de cette version sur un navigateur, cinq étapes présentent le fonctionnement local, permettent de choisir apparence, devise et langue des nouveaux exemplaires, puis expliquent le stockage local et les requêtes de catalogue. Les choix sont enregistrés ensemble à la dernière étape. Une fois terminé, l’onboarding ne réapparaît pas après un rechargement. Les utilisateurs des versions précédentes passent une fois par ce nouvel accueil en conservant leurs lots et leurs paramètres existants. Importer une ancienne sauvegarde ne relance pas un onboarding déjà terminé.
 
 La langue des nouveaux lots est réglable dans les paramètres (français par défaut), présélectionnée dans l’éditeur et appliquée aux listes. Elle ne change ni les lots existants, ni les noms ou images Scryfall ; les exemplaires physiques et le catalogue ont des langues distinctes. L’éditeur permet de modifier la langue pour un lot précis.
 
-Le détail d’une extension trie par numéro de carte avec un ordre naturel (`1`, `2`, `10`, `10a`). Les contrôles visibles se limitent à la recherche, la possession, la rareté et le tri. Couleur et type restent accessibles dans « Plus de filtres ». Le filtre d’extension est directement visible dans Toutes mes cartes, avec le nom et le code de chaque extension. Dans les recherches, il reste dans les options avancées lorsqu’il y a plusieurs éditions. Il n’est pas affiché dans le catalogue d’une extension unique. Aucun filtre de finition n’est affiché ; la finition reste un attribut modifiable à l’ajout. La barre d’ajout propose Nom → Photo → Lot. Un seul formulaire est affiché à la fois et la dernière méthode utilisée est conservée dans les préférences locales et les sauvegardes.
+Le détail d’une extension trie par numéro de carte avec un ordre naturel (`1`, `2`, `10`, `10a`). Les contrôles visibles se limitent à la recherche, la possession, la rareté et le tri. Couleur et type restent accessibles dans « Plus de filtres ». Le filtre d’extension est directement visible dans Toutes mes cartes, avec le nom et le code de chaque extension. Dans les recherches, il reste dans les options avancées lorsqu’il y a plusieurs éditions. Il n’est pas affiché dans le catalogue d’une extension unique. Aucun filtre de finition n’est affiché ; la finition reste un attribut modifiable à l’ajout. La barre d’ajout propose Nom → Lot. Un seul formulaire est affiché à la fois et la dernière méthode utilisée est conservée dans les préférences locales et les sauvegardes.
 
 La page Trade affiche uniquement « Soon… ». Les quantités Trade existantes sont conservées dans les lots et les sauvegardes pour une reprise ultérieure de cette fonction.
 
-## Ajout par photo et OCR local
+## Ajout par photo et OCR local (historique, en pause)
 
 `npm ci` exécute `scripts/prepare-ocr.mjs` : il copie le worker, les quatre variantes du cœur WebAssembly et les modèles français/anglais des paquets npm verrouillés vers `public/ocr/` (dossier généré et ignoré par Git). La compilation les inclut dans `dist/ocr/`. Aucune clé ni dépendance à un service de reconnaissance externe n’est nécessaire pour le mode Base. Les fichiers occupent environ 21 Mo dans le site compilé ; le navigateur ne charge que le cœur adapté à son appareil et les deux modèles au premier usage.
 
@@ -125,3 +125,25 @@ Les paramètres permettent de réinitialiser la collection locale. Le dialogue p
 ## Actions sur les cartes
 
 Dans la recherche d’ajout, cliquer sur l’image ouvre le formulaire d’ajout. Dans une extension ou Toutes mes cartes, cliquer sur une impression possédée ouvre ses lots pour les modifier ou les supprimer après confirmation ; une carte manquante ouvre l’ajout. Le bouton + reste disponible. Les images sont aussi accessibles au clavier. Les cartes réversibles Scryfall peuvent porter leur type uniquement sur leurs faces : le filtre utilise ces types sans supposer un champ principal présent.
+
+## Decks
+
+L’onglet Decks crée des listes stockées indépendamment pour Commander, Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Duel Commander et Brawl Standard (60 cartes). Une migration IndexedDB version 2 ajoute la table `decks` sans toucher aux lots existants. Chaque entrée conserve ses propres métadonnées Scryfall : aucun ajout au deck ne crée de lot ni ne remplit le catalogue de collection. Le nettoyage du catalogue préserve les decks ; la réinitialisation les efface.
+
+Le commandant est choisi séparément et fournit la couverture du deck. Un second commandant peut être ajouté pour les capacités compatibles (Partner, Partner with, Friends forever, Choose a Background, Doctor’s companion) ; la première carte fournit l’image. Les quantités se modifient dans la liste, les retraits et la suppression du deck demandent confirmation. Les formats construits ont une réserve. Le changement de format conserve la liste et déplace les commandants vers le principal si le nouveau format n’en utilise pas. Export texte de la liste et notes locales disponibles.
+
+La recherche en haut de l’accueil Decks filtre tous les decks contenant le nom saisi, sans tenir compte de la casse ni des accents : principal, commandants et réserve sont inclus. La recherche Scryfall du sélecteur de cartes accepte aussi sa syntaxe habituelle (`!"Plains"`, par exemple).
+
+Le contrôle de légalité utilise les statuts `legalities` Scryfall enregistrés avec chaque carte, le nombre de cartes, les quantités par identité Oracle entre impressions et zones, les restrictions Vintage, les exceptions explicites de quantité, les terrains de base, la réserve, l’éligibilité générale des commandants et leur identité couleur. Les règles manquantes sont signalées. « Actualiser les règles » recharge les cartes en lots de 75 sans écraser une modification concurrente du deck. Ce contrôle ne remplace pas une homologation : compagnons, cartes bannies uniquement comme commandant selon un format, interactions ou exceptions particulières restent à vérifier. L’ancienneté des instantanés est indiquée.
+
+Le bracket Commander est **déclaré par l’utilisateur**, jamais certifié automatiquement. La liste `is:gamechanger` est téléchargée à la demande depuis Scryfall, datée et conservée localement : repères de 0 en brackets 1/2, au plus 3 en bracket 3. L’app demande une revue des combos précoces, enchaînements de tours et déni massif de terrains ; ces questions ne couvrent pas tous les critères du cadre. Les alertes ne déterminent pas le niveau réel d’un deck. Référence : [présentation officielle des brackets](https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta). La documentation Wizards était inaccessible depuis le réseau de développement ; la liste réelle Scryfall et ses statuts ont été vérifiés, mais pas une certification des critères actuels de Wizards.
+
+L’export JSON inclut les decks avec leurs instantanés. Les anciennes sauvegardes version 1 restent importables ; en fusion, elles ne suppriment pas les decks. Les UUID évitent les doublons, les dates arbitrent les versions et le document entier est validé avant toute écriture. Un remplacement complet supprime les lots et decks actuels avant restauration.
+
+### Comptage des decks dans la collection
+
+L’interrupteur « Compter les cartes des decks dans la collection » apparaît dans Decks et Paramètres. Il pilote la même préférence locale `includeDeckCards`, désactivée par défaut, conservée au rechargement et dans les exports JSON. Les anciennes sauvegardes reçoivent `false`.
+
+Activé, il ajoute les quantités du principal, des commandants et des réserves à la vue de collection, aux totaux, à la valeur indicative et à la progression des extensions. Les copies déjà saisies dans les lots s’additionnent avec celles des decks ; une même carte dans plusieurs decks est comptée pour chaque liste. Les impressions restent distinctes, les identités Oracle servent au nombre de cartes différentes. Les lots restent physiquement séparés dans IndexedDB : aucune copie synthétique n’est sauvegardée comme lot. Les cartes de deck utilisent leur finition par défaut disponible (non-foil en priorité) pour l’estimation ; les decks ne suivent pas l’état ou la finition d’un exemplaire physique.
+
+Une carte visible grâce à un deck ouvre un accès vers son deck d’origine pour modifier ses quantités ou la retirer. Modifier ou supprimer une entrée du deck actualise la vue de collection lorsque le comptage est activé. Désactiver l’option masque ces quantités sans effacer les decks ni les lots. L’actualisation des prix depuis Toutes mes cartes recharge aussi les instantanés des decks quand ils sont inclus.

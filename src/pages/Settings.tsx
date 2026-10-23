@@ -1,3 +1,4 @@
+import { DeckCollectionSetting } from "../components/DeckCollectionSetting";
 import { useQueryClient } from "@tanstack/react-query";
 import { resetAppData } from "../services/reset";
 import { useVisionSession } from "../stores/vision";
@@ -78,14 +79,15 @@ export default function Settings() {
       <section className="settings-grid">
         <CurrencySettings />
         <LanguageSettings />
+        <DeckCollectionSetting />
         <div className="panel setting">
           <ShieldCheck />
           <h2>Local, par nature</h2>
           <p>
-            Votre collection est stockée uniquement dans ce navigateur, sur cet
+            Votre collection et vos decks sont stockés dans ce navigateur, sur cet
             appareil. Aucun compte, aucun backend. Exportez régulièrement une
             sauvegarde : effacer les données du navigateur supprime la
-            collection locale.
+            collection et les decks locaux.
           </p>
           <p className="muted">{usage}</p>
           <Button
@@ -106,8 +108,8 @@ export default function Settings() {
           <ArrowDownToLine />
           <h2>Sauvegarde JSON</h2>
           <p>
-            Exportez vos lots, extensions suivies et préférences. Les images et
-            le catalogue ne sont pas inclus.
+            Exportez vos lots, decks, extensions suivies et préférences. Les decks
+            incluent leurs métadonnées de cartes et les liens des images, pas les fichiers image ni le catalogue complet.
           </p>
           <div className="actions">
             <Button onClick={() => void download()}>
@@ -228,7 +230,7 @@ export default function Settings() {
           }}
         >
           <p>
-            Cette suppression est définitive. Exportez votre collection avant de
+            Cette suppression est définitive, decks compris. Exportez vos données avant de
             continuer si vous souhaitez la conserver.
           </p>
           <Button variant="outline" onClick={() => void download()}>
@@ -286,7 +288,7 @@ export default function Settings() {
           }}
         >
           <p>
-            {backup.lots.length} lots ·{" "}
+            {backup.decks.length} decks · {backup.lots.length} lots ·{" "}
             {backup.lots.reduce((n, l) => n + l.quantity, 0)} exemplaires ·{" "}
             {backup.preferences.tracked.length} extensions suivies.
           </p>
@@ -297,7 +299,7 @@ export default function Settings() {
               checked={replace}
               onChange={(e) => setReplace(e.target.checked)}
             />{" "}
-            Remplacement complet (supprime les lots actuels)
+            Remplacement complet (supprime les lots et decks actuels)
           </label>
           <p className="muted">
             En fusion, l’identifiant stable du lot évite les doublons. La
@@ -329,7 +331,7 @@ export default function Settings() {
         >
           <p>
             Les données Scryfall devront être téléchargées à nouveau. La
-            collection personnelle et les quantités Trade restent intactes.
+            collection, les decks et les quantités Trade restent intacts.
           </p>
           <Button
             onClick={async () => {

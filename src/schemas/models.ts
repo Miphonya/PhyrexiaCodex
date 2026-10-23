@@ -1,3 +1,4 @@
+import { deckSchema } from "./decks";
 import { z } from "zod";
 import { languageSchema } from "./languages";
 export const lotSchema = z
@@ -40,6 +41,7 @@ export const preferencesSchema = z.object({
   scannerPrivacySeen: z.boolean().default(false),
   currency: z.enum(["CHF", "EUR", "USD"]).default("CHF"),
   onlyTracked: z.boolean().default(false),
+  includeDeckCards: z.boolean().default(false),
   exchangeRate: exchangeRateSchema.nullable().default(null),
   tracked: z.array(z.string()),
   metadataDays: z.number().positive(),
@@ -54,6 +56,7 @@ export const defaults: Preferences = {
   scannerPrivacySeen: false,
   currency: "CHF",
   onlyTracked: false,
+  includeDeckCards: false,
   exchangeRate: null,
   tracked: [],
   metadataDays: 7,
@@ -64,9 +67,11 @@ export const backupSchema = z
     schemaVersion: z.literal(1),
     exportedAt: z.string().datetime(),
     lots: z.array(lotSchema),
+    decks: z.array(deckSchema).default([]),
     preferences: preferencesSchema,
   })
   .superRefine((v, ctx) => {
+    if (new Set(v.decks.map(d => d.id)).size !== v.decks.length) ctx.addIssue({ code: "custom", message: "Identifiants de decks dupliqués" });
     if (new Set(v.lots.map((l) => l.id)).size !== v.lots.length)
       ctx.addIssue({
         code: "custom",
@@ -86,10 +91,15 @@ export interface Card {
   finishes: string[];
   colors?: string[];
   type_line?: string;
+  oracle_text?: string;
+  color_identity?: string[];
+  keywords?: string[];
+  legalities?: Record<string, string>;
   image_uris?: { normal: string; small: string };
   card_faces?: {
     name: string;
     type_line?: string;
+    oracle_text?: string;
     image_uris?: { normal: string; small: string };
   }[];
   prices: {

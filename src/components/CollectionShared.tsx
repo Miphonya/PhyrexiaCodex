@@ -1,6 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { Database, Layers3, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
+import { projectCollection } from "../services/collectionView";
 import { db } from "../db";
 import { usePricing, useVaultPreferences } from "../hooks/usePricing";
 
@@ -8,8 +9,20 @@ export function usePreferences() {
   return useVaultPreferences();
 }
 
-export function useLots() {
+export function usePhysicalLots() {
   return useLiveQuery(() => db.lots.toArray(), []) ?? [];
+}
+export function useCollectionView() {
+  const p = usePreferences();
+  return useLiveQuery(async () => {
+    const [lots, cards, decks] = await Promise.all([
+      db.lots.toArray(), db.cards.toArray(), p.includeDeckCards ? db.decks.toArray() : Promise.resolve([]),
+    ]);
+    return projectCollection(lots, cards, decks, p.includeDeckCards);
+  }, [p.includeDeckCards]) ?? { lots: [], cards: [] };
+}
+export function useLots() {
+  return useCollectionView().lots;
 }
 
 export function useDebounced(value: string) {
@@ -90,8 +103,7 @@ export function PageHead({
 
 export function Stats() {
   const pricing = usePricing();
-  const lots = useLots();
-  const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
+  const { lots, cards } = useCollectionView();
   const p = usePreferences();
   let value = 0,
     missing = 0;
@@ -105,7 +117,7 @@ export function Stats() {
     <div className="stats">
       {[
         {
-          label: "EXEMPLAIRES PHYSIQUES",
+          label: p.includeDeckCards ? "EXEMPLAIRES · DECKS INCLUS" : "EXEMPLAIRES PHYSIQUES",
           value: lots.reduce((n, l) => n + l.quantity, 0),
           icon: Layers3,
           note: `${new Set(lots.map((l) => l.cardId)).size} impressions distinctes`,

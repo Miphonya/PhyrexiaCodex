@@ -117,6 +117,7 @@ describe("sauvegardes", () => {
     await savePrefs({ ...defaults, tracked: ["one"] });
     const b = await exportBackup();
     expect(Object.keys(b).sort()).toEqual([
+      "decks",
       "exportedAt",
       "lots",
       "preferences",
