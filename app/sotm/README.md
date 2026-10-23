@@ -20,7 +20,9 @@ Les tâches cloud utilisent le checkout existant ; aucun worktree supplémentair
 
 ## Hébergement public
 
-Le code source et les outils sont dans `app/sotm/` ; seul `index.html` reste à la racine, avec les métadonnées Git/GitHub. Le workflow `.github/workflows/deploy.yml` vérifie les tests et compile depuis `app/sotm`, puis fournit une archive `sotm-site`. Il ne publie plus automatiquement sur GitHub Pages.
+Le code source et les outils sont dans `app/sotm/` ; seul `index.html` reste à la racine, avec les métadonnées Git/GitHub. Le workflow `.github/workflows/deploy.yml` vérifie les tests et compile depuis `app/sotm`, puis publie le contenu de `app/sotm/dist` sur GitHub Pages à chaque push sur `main`. Il fournit aussi une archive téléchargeable `sotm-site`.
+
+Dans le dépôt GitHub, ouvrir **Settings → Pages → Build and deployment**, puis choisir **GitHub Actions** comme source. Dans **Actions → Validate and deploy Pages**, suivre l’exécution ou cliquer sur **Run workflow** avec la branche `main`. Après réussite, le site est accessible à `https://miphonya.github.io/PhyrexiaCodex/`. Aucun dossier source ni branche `gh-pages` n’est à sélectionner : le workflow publie les fichiers compilés.
 
 Pour publier sur un autre hébergeur statique, exécuter `npm run build` depuis `app/sotm`, puis copier **le contenu** de `app/sotm/dist/` à l’emplacement voulu :
 
@@ -89,7 +91,7 @@ Magic: The Gathering et les images de cartes appartiennent à Wizards of the Coa
 
 Les 44 tests Vitest et la compilation de production ont passé. Un parcours navigateur sur les véritables réponses Scryfall a chargé les 479 impressions papier de ONE (pagination incluse), leurs images, une recherche « Elesh Norn set:one », et la mise à jour des prix via `/cards/collection`. Ajout de trois exemplaires, édition de la quantité Trade, thèmes, export, réimport sans doublon, absence de débordement mobile et rechargement hors ligne de la production ont été vérifiés sans exception JavaScript.
 
-Dans la machine cloud, le navigateur automatisé ne fait pas confiance au certificat du proxy. Le parcours réel a donc utilisé un adaptateur de test relayant les requêtes par `curl`, avec validation TLS et certificats système conservés. Les réponses provenaient de Scryfall, sans fixtures. Cet adaptateur ne fait pas partie de l’application ; les visiteurs utilisent directement `fetch` dans leur navigateur. La capture caméra réelle nécessite un appareil et une autorisation utilisateur ; elle n’a pas été validée sur du matériel physique. La publication est maintenant gérée séparément, depuis le contenu du dossier compilé.
+Dans la machine cloud, le navigateur automatisé ne fait pas confiance au certificat du proxy. Le parcours réel a donc utilisé un adaptateur de test relayant les requêtes par `curl`, avec validation TLS et certificats système conservés. Les réponses provenaient de Scryfall, sans fixtures. Cet adaptateur ne fait pas partie de l’application ; les visiteurs utilisent directement `fetch` dans leur navigateur. La capture caméra réelle nécessite un appareil et une autorisation utilisateur ; elle n’a pas été validée sur du matériel physique. La publication GitHub Pages utilise le contenu du dossier compilé.
 
 ## Devises, suivi et ajout par liste
 
