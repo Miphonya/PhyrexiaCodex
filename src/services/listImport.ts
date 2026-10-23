@@ -51,6 +51,7 @@ const normalize = (s: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
+const namesFor = (card: Card) => [card.name, card.printed_name, ...(card.card_faces ?? []).flatMap(face => [face.name, face.printed_name])].filter((name): name is string => !!name);
 export async function prepareList(text: string, options: { cacheCards?: boolean } = {}): Promise<ImportRow[]> {
   const lines = text
     .split(/\r?\n/)
@@ -118,6 +119,43 @@ export async function prepareList(text: string, options: { cacheCards?: boolean 
       }
     }
   }
+  // Keep the canonical printing, but validate localized names against official translations.
+  const languages = [...new Set(["fr", (await prefs()).defaultLanguage].filter(lang => lang !== "en"))];
+  const aliases = new Map<string, string[]>();
+  const unavailable = new Set<string>();
+  const needed = [...new Map(rows.filter(row => {
+    if (!row.entry || row.error) return false;
+    const card = cards.get(key(row.entry.set, row.entry.collectorNumber));
+    return card && !namesFor(card).some(name => normalize(name) === normalize(row.entry!.name));
+  }).map(row => [key(row.entry!.set, row.entry!.collectorNumber), row.entry!])).values()];
+  const pending: ListEntry[] = [];
+  for (const entry of needed) {
+    const id = key(entry.set, entry.collectorNumber);
+    const cached = await db.cache.get(`import-names:${id}:${languages.join(",")}`);
+    if (cached && Date.now() - cached.at < 30 * 86400000 && Array.isArray(cached.data)) aliases.set(id, cached.data as string[]);
+    else pending.push(entry);
+  }
+  for (let start = 0; start < pending.length; start += 10) {
+    const batch = pending.slice(start, start + 10);
+    const query = `(${batch.map(e => `(set:${e.set} cn:${e.collectorNumber})`).join(" or ")}) (${languages.map(lang => `lang:${lang}`).join(" or ")})`;
+    try {
+      let next: string | undefined = `/cards/search?q=${encodeURIComponent(query)}&unique=prints&include_multilingual=true`;
+      const translated: Card[] = [];
+      while (next) {
+        const page: { data: Card[]; has_more?: boolean; next_page?: string } = await request(next);
+        translated.push(...page.data); next = page.has_more ? page.next_page : undefined;
+      }
+      for (const entry of batch) {
+        const id = key(entry.set, entry.collectorNumber);
+        const canonical = cards.get(id)!;
+        const names = translated.filter(c => key(c.set, c.collector_number) === id && (!canonical.oracle_id || c.oracle_id === canonical.oracle_id)).flatMap(namesFor);
+        aliases.set(id, names);
+        await db.cache.put({ id: `import-names:${id}:${languages.join(",")}`, at: Date.now(), data: names });
+      }
+    } catch {
+      for (const entry of batch) unavailable.add(key(entry.set, entry.collectorNumber));
+    }
+  }
   return rows.map((row) => {
     if (!row.entry || row.error) return row;
     const card = cards.get(key(row.entry.set, row.entry.collectorNumber));
@@ -127,14 +165,16 @@ export async function prepareList(text: string, options: { cacheCards?: boolean 
         error: "Impression introuvable : vérifiez extension et numéro.",
       };
     if (
-      ![card.name, ...(card.card_faces ?? []).map((f) => f.name)].some(
-        (name) => normalize(name) === normalize(row.entry!.name),
+      ![...namesFor(card), ...(aliases.get(key(row.entry.set, row.entry.collectorNumber)) ?? [])].some(
+        name => normalize(name) === normalize(row.entry!.name),
       )
     )
       return {
         ...row,
         card,
-        error: `Le numéro correspond à « ${card.name} ». Corrigez le nom ou le numéro.`,
+        error: unavailable.has(key(row.entry.set, row.entry.collectorNumber))
+          ? `Vérification du nom traduit indisponible. Réessayez en ligne ou utilisez « ${card.name} ».`
+          : `Le numéro correspond à « ${card.name} ». Corrigez le nom ou le numéro.`,
       };
     if (!card.finishes.includes(row.entry.finish))
       return {

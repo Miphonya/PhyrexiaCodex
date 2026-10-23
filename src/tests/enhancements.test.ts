@@ -181,6 +181,7 @@ it("vérifie les impressions en un appel groupé et prévisualise sans modifier 
   expect(await db.lots.count()).toBe(2);
 });
 it("refuse un nom incompatible, une finition indisponible et un import partiel", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: [] }))));
   await db.cards.put(card);
   const rows = await prepareList(
     "1 Wrong name (DSK) 75\n1 The Tale of Tamiyo (DSK) 75 *E*\nnot valid",
@@ -204,4 +205,24 @@ it("accepte les types portés par les faces réversibles de Scryfall", () => {
   expect(cardTypeLine(reversible).toLowerCase()).toContain("golem");
   expect(cardTypeLine({ ...card, type_line: undefined })).toBe("");
   expect(cardTypeLine(card)).toBe("Enchantment");
+});
+
+it("accepte le nom français officiel sans abandonner la validation du nom et met la traduction en cache", async () => {
+  const english = { ...card, id: "duelist", oracle_id: "oracle-duelist", name: "Duelist of Deep Faith", set: "one", collector_number: "9" };
+  const french = { ...english, id: "duelist-fr", lang: "fr", printed_name: "Duelliste de vive foi" };
+  await db.cards.put(english);
+  const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: [french] })));
+  vi.stubGlobal("fetch", fetcher);
+  const rows = await prepareList("1 Duelliste de vive foi (ONE) 9");
+  expect(rows[0].error).toBeUndefined(); expect(rows[0].card?.id).toBe("duelist");
+  expect(String(fetcher.mock.calls[0][0])).toContain("include_multilingual=true");
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Hors ligne")));
+  expect((await prepareList("1 Duelliste de vive foi (ONE) 9"))[0].error).toBeUndefined();
+  expect((await prepareList("1 Une mauvaise carte (ONE) 9"))[0].error).toContain("Le numéro correspond");
+});
+it("n’accepte pas la traduction d’une autre carte ou d’un autre numéro", async () => {
+  const english = { ...card, id: "duelist", oracle_id: "oracle-duelist", name: "Duelist of Deep Faith", set: "one", collector_number: "9" };
+  await db.cards.put(english);
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: [{ ...english, oracle_id: "autre-oracle", printed_name: "Mauvaise traduction", lang: "fr" }] }))));
+  expect((await prepareList("1 Mauvaise traduction (ONE) 9"))[0].error).toContain("Le numéro correspond");
 });

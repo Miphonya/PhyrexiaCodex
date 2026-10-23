@@ -45,6 +45,7 @@ export default function DeckDetail() {
     <Link to="/decks" className="deck-back"><ArrowLeft size={16} /> Tous les decks</Link>
     <PageHead eyebrow={rules.label.toUpperCase()} title={deck.name} description={p.includeDeckCards ? "Les cartes de ce deck sont comptées dans votre collection." : "Ce deck est exclu des quantités de votre collection."}>
       <Button variant="outline" onClick={() => setEditInfo(true)}>Modifier le deck</Button>
+      <Button variant="ghost" onClick={() => setDeleteDeck(true)}><Trash2 size={16} />Supprimer le deck</Button>
       <Button variant="ghost" onClick={exportList}><Download size={16} />Exporter la liste</Button>
     </PageHead>
     {error && <p className="error" role="alert">{error}</p>}
@@ -112,7 +113,6 @@ export default function DeckDetail() {
           <a href="https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta" target="_blank" rel="noreferrer">Lire le cadre officiel des brackets ↗</a>
         </section>}
         <section className="panel deck-notes"><h2>Notes</h2><textarea key={deck.id + "-notes"} aria-label="Notes du deck" defaultValue={deck.notes} placeholder="Plan de jeu, idées, améliorations…" maxLength={6000} onBlur={e => { const notes = e.target.value; if (notes !== deck.notes) void run(() => mutateDeck(id, d => ({ ...d, notes }))); }} /></section>
-        <Button variant="ghost" onClick={() => setDeleteDeck(true)}><Trash2 size={16} />Supprimer le deck</Button>
       </aside>
     </div>
     {picker && <DeckCardPicker commander={picker.zone === "commander"} onClose={() => setPicker(null)} onPick={async (card, details, quantity) => { await addDeckCard(id, { ...card, fetchedAt: Date.now() }, picker.zone, picker.second, details, quantity); setPicker(null); notify(picker.zone === "commander" ? "Commandant sélectionné" : p.includeDeckCards ? "Carte ajoutée au deck et comptée dans la collection" : "Carte ajoutée au deck uniquement"); }} />}

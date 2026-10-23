@@ -85,6 +85,7 @@ export interface Card {
   id: string;
   oracle_id?: string;
   name: string;
+  printed_name?: string;
   set: string;
   set_name: string;
   collector_number: string;
@@ -100,6 +101,7 @@ export interface Card {
   image_uris?: { normal: string; small: string };
   card_faces?: {
     name: string;
+    printed_name?: string;
     type_line?: string;
     oracle_text?: string;
     image_uris?: { normal: string; small: string };
