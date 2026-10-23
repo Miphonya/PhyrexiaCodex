@@ -1,3 +1,4 @@
+import { LanguageSettings } from "../components/LanguageSettings";
 import { CurrencySettings } from "../components/CurrencySettings";
 import {
   ArrowDownToLine,
@@ -69,6 +70,7 @@ export default function Settings() {
       />
       <section className="settings-grid">
         <CurrencySettings />
+        <LanguageSettings />
         <div className="panel setting">
           <ShieldCheck />
           <h2>Local, par nature</h2>

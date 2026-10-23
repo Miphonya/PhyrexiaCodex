@@ -1,12 +1,11 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { Database, Layers3, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import { db, prefs } from "../db";
-import { defaults } from "../schemas/models";
-import { usePricing } from "../hooks/usePricing";
+import { db } from "../db";
+import { usePricing, useVaultPreferences } from "../hooks/usePricing";
 
 export function usePreferences() {
-  return useLiveQuery(prefs, []) ?? defaults;
+  return useVaultPreferences();
 }
 
 export function useLots() {

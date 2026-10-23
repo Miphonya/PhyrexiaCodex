@@ -1,3 +1,5 @@
+import { usePricing } from "../hooks/usePricing";
+import { languages } from "../schemas/languages";
 import { useState } from "react";
 import { FilePlus2 } from "lucide-react";
 import {
@@ -10,6 +12,7 @@ import { useUI } from "../stores/ui";
 import { Button } from "./ui/button";
 import { Modal } from "./ui/dialog";
 export function ListImporter() {
+  const { defaultLanguage } = usePricing();
   const [text, setText] = useState("");
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [busy, setBusy] = useState(false);
@@ -42,15 +45,17 @@ export function ListImporter() {
         </div>
       </div>
       <p className="muted">
-        Une carte par ligne : quantité, nom, (extension), numéro.{" "}
-        <code>*F*</code> = foil, <code>*E*</code> = etched ; sans marqueur =
-        non-foil.
+        Une carte par ligne : quantité, nom, (extension), numéro. Les noms et
+        images du catalogue restent ceux de Scryfall. <code>*F*</code> = foil,{" "}
+        <code>*E*</code> = etched ; sans marqueur = non-foil.
       </p>
       <label htmlFor="card-list">Votre liste de cartes</label>
       <textarea
         id="card-list"
         rows={5}
-        placeholder={"1 The Tale of Tamiyo (DSK) 75 *F*\n2 Sol Ring (CMM) 410"}
+        placeholder={
+          "1 Elesh Norn, Mother of Machines (ONE) 10 *F*\n2 Elesh Norn, Mother of Machines (ONE) 10"
+        }
         value={text}
         disabled={busy}
         onChange={(e) => {
@@ -93,7 +98,7 @@ export function ListImporter() {
                 {row.entry && (
                   <span>
                     {row.entry.set.toUpperCase()} #{row.entry.collectorNumber} ·{" "}
-                    {row.entry.finish} · {row.card?.lang ?? "—"}
+                    {row.entry.finish} · {languages[defaultLanguage]}
                   </span>
                 )}
                 {row.error && <p role="alert">{row.error}</p>}
@@ -113,9 +118,10 @@ export function ListImporter() {
             </select>
           </label>
           <p className="muted">
-            Nouveaux lots, non signés et non altérés. Langue de l’impression
-            Scryfall, quantité Trade à zéro. Cette liste ajoute des exemplaires
-            ; elle ne remplace pas votre collection.
+            Nouveaux lots, non signés et non altérés. Langue des exemplaires :{" "}
+            {languages[defaultLanguage]} (réglable dans les paramètres),
+            quantité Trade à zéro. Cette liste ajoute des exemplaires ; elle ne
+            remplace pas votre collection.
           </p>
           <Button
             disabled={busy || invalid > 0}

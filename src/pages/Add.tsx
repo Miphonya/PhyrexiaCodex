@@ -56,8 +56,6 @@ export default function Add() {
         title="Ajouter des cartes"
         description="Trouvez la bonne impression. Conservez chaque détail de vos exemplaires."
       />
-      <ListImporter />
-      <Scanner />
       <form
         className="toolbar"
         onSubmit={(e) => {
@@ -104,6 +102,8 @@ export default function Add() {
           {error}
         </p>
       )}
+      <ListImporter />
+      <Scanner />
       {!committed && (
         <Empty title="Quelle carte rejoint votre collection ?">
           Recherchez son nom pour voir les impressions disponibles.

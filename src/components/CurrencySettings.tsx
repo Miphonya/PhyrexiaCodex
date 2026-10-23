@@ -1,12 +1,12 @@
+import { useVaultPreferences } from "../hooks/usePricing";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLiveQuery } from "dexie-react-hooks";
-import { prefs, updatePrefs } from "../db";
-import { defaults, type Currency } from "../schemas/models";
+import { updatePrefs } from "../db";
+import { type Currency } from "../schemas/models";
 import { refreshExchangeRate } from "../services/exchange";
 import { useState } from "react";
 import { Button } from "./ui/button";
 export function CurrencySelect() {
-  const p = useLiveQuery(prefs, []) ?? defaults;
+  const p = useVaultPreferences();
   return (
     <select
       aria-label="Devise des prix"
@@ -22,7 +22,7 @@ export function CurrencySelect() {
   );
 }
 export function ExchangeSync() {
-  const p = useLiveQuery(prefs, []) ?? defaults;
+  const p = useVaultPreferences();
   useQuery({
     queryKey: ["exchange-rate"],
     queryFn: () => refreshExchangeRate(),
@@ -36,7 +36,7 @@ export function CurrencySettings() {
   const client = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const p = useLiveQuery(prefs, []) ?? defaults;
+  const p = useVaultPreferences();
   const q = useQuery({
     queryKey: ["exchange-rate"],
     queryFn: () => refreshExchangeRate(),

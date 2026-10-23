@@ -23,8 +23,6 @@ export default function LotsPanel({
   const [search, setSearch] = useState("");
   const [condition, setCondition] = useState("all");
   const [set, setSet] = useState("all");
-  const [rarity, setRarity] = useState("all");
-  const [maxPrice, setMaxPrice] = useState("");
   const [edit, setEdit] = useState<{ card: Card; lot: Lot } | null>(null);
   const [remove, setRemove] = useState<Lot | null>(null);
   const [merge, setMerge] = useState<[Lot, Lot] | null>(null);
@@ -33,15 +31,7 @@ export default function LotsPanel({
       (!tradeOnly || l.trade > 0) &&
       l.name.toLowerCase().includes(search.toLowerCase()) &&
       (condition === "all" || l.condition === condition) &&
-      (set === "all" || l.set === set) &&
-      (rarity === "all" ||
-        cards.find((c) => c.id === l.cardId)?.rarity === rarity) &&
-      (!maxPrice ||
-        (() => {
-          const c = cards.find((c) => c.id === l.cardId);
-          const p = c ? pricing.quote(c, l.finish).amount : null;
-          return p !== null && p <= Number(maxPrice);
-        })()),
+      (set === "all" || l.set === set),
   );
   let total = 0,
     unpriced = 0;
@@ -89,37 +79,18 @@ export default function LotsPanel({
             <option key={c}>{c}</option>
           ))}
         </select>
-        <select
-          aria-label="Extension"
-          value={set}
-          onChange={(e) => setSet(e.target.value)}
-        >
-          <option value="all">Toutes extensions</option>
-          {[...new Set(all.map((l) => l.set))].map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        <select
-          aria-label="Rareté des lots"
-          value={rarity}
-          onChange={(e) => setRarity(e.target.value)}
-        >
-          <option value="all">Toutes raretés</option>
-          {["common", "uncommon", "rare", "mythic", "special", "bonus"].map(
-            (r) => (
-              <option key={r}>{r}</option>
-            ),
-          )}
-        </select>
-        <input
-          className="type-filter"
-          type="number"
-          min="0"
-          placeholder={"Prix max. " + pricing.currency}
-          aria-label="Prix maximal"
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(e.target.value)}
-        />
+        {new Set(all.map((l) => l.set)).size > 1 && (
+          <select
+            aria-label="Extension"
+            value={set}
+            onChange={(e) => setSet(e.target.value)}
+          >
+            <option value="all">Toutes extensions</option>
+            {[...new Set(all.map((l) => l.set))].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        )}
       </div>
       <div className={tradeOnly ? "trade-grid" : "lot-list"}>
         {lots.map((l) => {

@@ -1,4 +1,4 @@
-import { CurrencySelect, ExchangeSync } from "./components/CurrencySettings";
+import { ExchangeSync } from "./components/CurrencySettings";
 import {
   ArrowLeftRight,
   Check,
@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
-import { Empty, PageHead, usePreferences } from "./components/CollectionShared";
-import LotsPanel from "./components/LotsPanel";
+import { Empty, usePreferences } from "./components/CollectionShared";
 import Add from "./pages/Add";
 import Collection from "./pages/Collection";
 import Owned from "./pages/Owned";
@@ -86,7 +85,6 @@ export default function App() {
             LE VAULT <ChevronRight size={12} /> <b>Archive personnelle</b>
           </span>
           <span className="privacy">
-            <CurrencySelect />
             <ShieldCheck size={14} /> Stockage local <i />{" "}
             {online ? "Connecté" : "Hors ligne"}
           </span>
@@ -106,18 +104,10 @@ export default function App() {
             <Route
               path="/trade"
               element={
-                <>
-                  <PageHead
-                    eyebrow="LE CERCLE DES ÉCHANGES"
-                    title="Trade"
-                    description="Vos exemplaires disponibles. Toujours liés à votre collection."
-                  />
-                  <LotsPanel tradeOnly />
-                  <p className="muted">
-                    Valeurs indicatives Scryfall, hors estimation des
-                    signatures, altérations et états.
-                  </p>
-                </>
+                <section className="coming-soon" aria-label="Trade">
+                  <img src={logo} alt="" />
+                  <h1>Soon…</h1>
+                </section>
               }
             />
             <Route path="/settings" element={<Settings />} />

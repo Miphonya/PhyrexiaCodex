@@ -65,23 +65,33 @@ Magic: The Gathering et les images de cartes appartiennent à Wizards of the Coa
 
 ### Validation de cette implémentation
 
-Les 25 tests Vitest et la compilation de production ont passé. Un parcours navigateur sur les véritables réponses Scryfall a chargé les 479 impressions papier de ONE (pagination incluse), leurs images, une recherche « Elesh Norn set:one », et la mise à jour des prix via `/cards/collection`. Ajout de trois exemplaires, édition de la quantité Trade, thèmes, export, réimport sans doublon, absence de débordement mobile et rechargement hors ligne de la production ont été vérifiés sans exception JavaScript.
+Les 30 tests Vitest et la compilation de production ont passé. Un parcours navigateur sur les véritables réponses Scryfall a chargé les 479 impressions papier de ONE (pagination incluse), leurs images, une recherche « Elesh Norn set:one », et la mise à jour des prix via `/cards/collection`. Ajout de trois exemplaires, édition de la quantité Trade, thèmes, export, réimport sans doublon, absence de débordement mobile et rechargement hors ligne de la production ont été vérifiés sans exception JavaScript.
 
 Dans la machine cloud, le navigateur automatisé ne fait pas confiance au certificat du proxy. Le parcours réel a donc utilisé un adaptateur de test relayant les requêtes par `curl`, avec validation TLS et certificats système conservés. Les réponses provenaient de Scryfall, sans fixtures. Cet adaptateur ne fait pas partie de l’application ; les visiteurs utilisent directement `fetch` dans leur navigateur. La capture caméra réelle nécessite un appareil et une autorisation utilisateur ; elle n’a pas été validée sur du matériel physique. La publication GitHub Pages reste à effectuer.
 
 ## Devises, suivi et ajout par liste
 
-Le sélecteur de la barre supérieure et les paramètres proposent CHF (par défaut), EUR et USD. EUR/USD utilisent les champs Scryfall de la finition demandée ; CHF convertit le prix EUR avec le taux quotidien de la Currency API de Fawaz Ahmed distribuée via jsDelivr. La source, la date et le taux figurent dans les paramètres. Le taux est conservé dans les préférences et dans les sauvegardes ; les données sont rafraîchies au maximum une fois par 24 heures, sauf demande explicite. Hors ligne ou en cas d’erreur, le dernier taux est conservé et son ancienneté signalée. Sans taux ou prix fiable, le résultat est N/A. Les totaux, le filtre de prix et le tri utilisent la devise sélectionnée.
+Le sélecteur des paramètres propose CHF (par défaut), EUR et USD ; il n’apparaît pas dans la barre supérieure. La devise est aussi choisie lors de la première configuration. EUR/USD utilisent les champs Scryfall de la finition demandée ; CHF convertit le prix EUR avec le taux quotidien de la Currency API de Fawaz Ahmed distribuée via jsDelivr. La source, la date et le taux figurent dans les paramètres. Le taux est conservé dans les préférences et dans les sauvegardes ; les données sont rafraîchies au maximum une fois par 24 heures, sauf demande explicite. Hors ligne ou en cas d’erreur, le dernier taux est conservé et son ancienneté signalée. Sans taux ou prix fiable, le résultat est N/A. Les totaux et le tri par valeur utilisent la devise sélectionnée.
 
 Le bouton « Extensions suivies uniquement » est mémorisé dans IndexedDB : navigation et rechargement ne le réinitialisent pas. Dans le détail d’une extension, les impressions non possédées sont grisées et marquées « Manquante ». Le filtre « Possession » propose toutes, possédées et manquantes.
 
 Dans Ajouter / Scanner, collez une carte par ligne :
 
 ```text
-1 The Tale of Tamiyo (DSK) 75 *F*
-2 The Tale of Tamiyo (DSK) 75
+1 Elesh Norn, Mother of Machines (ONE) 10 *F*
+2 Elesh Norn, Mother of Machines (ONE) 10
 ```
 
-`*F*` signifie foil, `*E*` etched ; l’absence de marqueur signifie non-foil. Les astérisques échappés `\*F\*` sont également acceptés. Les impressions sont résolues par extension et numéro en appels groupés de 75 maximum (les impressions anglaises déjà en cache sont réutilisées). L’aperçu vérifie le nom et la disponibilité de la finition. Une erreur bloque tout l’ajout. Choisissez un état commun, puis confirmez : chaque ligne crée un lot avec la langue de l’impression, sans signature ni altération et avec Trade à zéro. Maximum 1 000 lignes par analyse. Une même confirmation ne peut pas être exécutée deux fois ; analyser à nouveau une liste crée volontairement de nouveaux exemplaires. Pour restaurer une sauvegarde sans doublons, utilisez l’import JSON des paramètres.
+`*F*` signifie foil, `*E*` etched ; l’absence de marqueur signifie non-foil. Les astérisques échappés `\*F\*` sont également acceptés. Les impressions sont résolues par extension et numéro en appels groupés de 75 maximum (les impressions anglaises déjà en cache sont réutilisées). L’aperçu vérifie le nom et la disponibilité de la finition. Une erreur bloque tout l’ajout. Choisissez un état commun, puis confirmez : chaque ligne crée un lot avec la langue par défaut choisie dans les paramètres, sans signature ni altération et avec Trade à zéro. Maximum 1 000 lignes par analyse. Une même confirmation ne peut pas être exécutée deux fois ; analyser à nouveau une liste crée volontairement de nouveaux exemplaires. Pour restaurer une sauvegarde sans doublons, utilisez l’import JSON des paramètres.
 
 Les anciennes préférences et sauvegardes version 1 reçoivent automatiquement les nouveaux paramètres par défaut sans effacer la collection.
+
+## Première configuration et interface simplifiée
+
+Au premier lancement de cette version sur un navigateur, quatre étapes présentent le fonctionnement local puis permettent de choisir apparence, devise et langue des nouveaux exemplaires. Les choix sont enregistrés ensemble à la dernière étape. Une fois terminé, l’onboarding ne réapparaît pas après un rechargement. Les utilisateurs des versions précédentes passent une fois par ce nouvel accueil en conservant leurs lots et leurs paramètres existants. Importer une ancienne sauvegarde ne relance pas un onboarding déjà terminé.
+
+La langue des nouveaux lots est réglable dans les paramètres (français par défaut), présélectionnée dans l’éditeur et appliquée aux listes. Elle ne change ni les lots existants, ni les noms ou images Scryfall ; les exemplaires physiques et le catalogue ont des langues distinctes. L’éditeur permet de modifier la langue pour un lot précis.
+
+Le détail d’une extension trie par numéro de carte avec un ordre naturel (`1`, `2`, `10`, `10a`). Les contrôles visibles se limitent à la recherche, la possession, la rareté et le tri. Couleur et type restent accessibles dans « Plus de filtres ». Le choix d’édition ne s’affiche que hors des extensions, dans les options avancées et si plusieurs éditions sont présentes. Aucun filtre de finition n’est affiché ; la finition reste un attribut modifiable à l’ajout. Les recherches par nom précèdent l’import par liste, puis la capture caméra.
+
+La page Trade affiche uniquement « Soon… ». Les quantités Trade existantes sont conservées dans les lots et les sauvegardes pour une reprise ultérieure de cette fonction.

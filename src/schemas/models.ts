@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { languageSchema } from "./languages";
 export const lotSchema = z
   .object({
     id: z.string().uuid(),
@@ -33,6 +34,8 @@ export type ExchangeRate = z.infer<typeof exchangeRateSchema>;
 export type Currency = "CHF" | "EUR" | "USD";
 export const preferencesSchema = z.object({
   theme: z.enum(["dark", "light"]),
+  defaultLanguage: languageSchema.default("fr"),
+  onboardingCompleted: z.boolean().default(false),
   currency: z.enum(["CHF", "EUR", "USD"]).default("CHF"),
   onlyTracked: z.boolean().default(false),
   exchangeRate: exchangeRateSchema.nullable().default(null),
@@ -43,6 +46,8 @@ export const preferencesSchema = z.object({
 export type Preferences = z.infer<typeof preferencesSchema>;
 export const defaults: Preferences = {
   theme: "dark",
+  defaultLanguage: "fr",
+  onboardingCompleted: false,
   currency: "CHF",
   onlyTracked: false,
   exchangeRate: null,

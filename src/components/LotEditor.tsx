@@ -1,3 +1,5 @@
+import { usePricing } from "../hooks/usePricing";
+import { languages } from "../schemas/languages";
 import { useState } from "react";
 import { saveLot } from "../db";
 import { lotSchema, type Card, type Lot } from "../schemas/models";
@@ -13,6 +15,7 @@ export function LotEditor({
   lot?: Lot;
   onClose: () => void;
 }) {
+  const { defaultLanguage } = usePricing();
   const now = new Date().toISOString();
   const [value, setValue] = useState<Lot>(
     lot ?? {
@@ -22,7 +25,7 @@ export function LotEditor({
       name: card.name,
       set: card.set,
       collectorNumber: card.collector_number,
-      language: card.lang,
+      language: defaultLanguage,
       finish: (card.finishes[0] ?? "nonfoil") as Lot["finish"],
       condition: "NM",
       signed: false,
@@ -101,32 +104,20 @@ export function LotEditor({
           <label>
             Langue
             <select
+              aria-label="Langue de l’exemplaire"
               value={value.language}
               onChange={(e) => change("language", e.target.value)}
             >
               {[
                 ...new Set([
+                  value.language,
                   card.lang,
-                  "en",
-                  "fr",
-                  "de",
-                  "es",
-                  "it",
-                  "pt",
-                  "ja",
-                  "ko",
-                  "ru",
-                  "zhs",
-                  "zht",
-                  "he",
-                  "la",
-                  "grc",
-                  "ar",
-                  "sa",
-                  "ph",
+                  ...Object.keys(languages),
                 ]),
               ].map((l) => (
-                <option key={l}>{l}</option>
+                <option key={l} value={l}>
+                  {languages[l as keyof typeof languages] ?? l}
+                </option>
               ))}
             </select>
           </label>

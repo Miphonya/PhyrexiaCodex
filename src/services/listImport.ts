@@ -1,4 +1,4 @@
-import { db, saveLot } from "../db";
+import { db, saveLot, prefs } from "../db";
 import { lotSchema, type Card, type Lot } from "../schemas/models";
 import { request } from "./scryfall";
 export interface ListEntry {
@@ -22,7 +22,10 @@ export function parseListLine(input: string, line = 1): ListEntry {
   const match = clean.match(
     /^(\d+)\s+(?:x\s+)?(.+?)\s+\(([a-z0-9]+)\)\s+([^\s*]+)(?:\s+(\*(?:F|E)\*))?\s*$/i,
   );
-  if (!match) throw Error("Format attendu : 1 The Tale of Tamiyo (DSK) 75 *F*");
+  if (!match)
+    throw Error(
+      "Format attendu : 1 Elesh Norn, Mother of Machines (ONE) 10 *F*",
+    );
   const quantity = Number(match[1]);
   if (!Number.isSafeInteger(quantity) || quantity < 1)
     throw Error("Quantité entière supérieure à zéro requise");
@@ -148,6 +151,7 @@ export async function commitList(
 ) {
   if (!rows.length || rows.some((r) => r.error || !r.entry || !r.card))
     throw Error("Corrigez toutes les lignes avant de confirmer.");
+  const { defaultLanguage } = await prefs();
   const now = new Date().toISOString();
   const lots = rows.map(({ id, entry: e, card: c }) =>
     lotSchema.parse({
@@ -157,7 +161,7 @@ export async function commitList(
       name: c!.name,
       set: c!.set,
       collectorNumber: c!.collector_number,
-      language: c!.lang,
+      language: defaultLanguage,
       finish: e!.finish,
       quantity: e!.quantity,
       trade: 0,

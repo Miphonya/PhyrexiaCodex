@@ -10,9 +10,13 @@ export function PricingProvider({ children }: { children: ReactNode }) {
     <PricingContext.Provider value={p}>{children}</PricingContext.Provider>
   );
 }
+export function useVaultPreferences() {
+  return useContext(PricingContext);
+}
 export function usePricing() {
-  const p = useContext(PricingContext);
+  const p = useVaultPreferences();
   return {
+    defaultLanguage: p.defaultLanguage,
     currency: p.currency,
     rate: p.exchangeRate,
     quote: (c: Card, f: Lot["finish"] = "nonfoil") =>

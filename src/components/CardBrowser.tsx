@@ -1,12 +1,12 @@
-import { Grid2X2, List, Search } from "lucide-react";
+import { Grid2X2, List, Search, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
-import { CardTile } from "../components/CardTile";
-import { Empty, useLots } from "../components/CollectionShared";
-import { LotEditor } from "../components/LotEditor";
-import { Button } from "../components/ui/button";
-import { type Card } from "../schemas/models";
+import { CardTile } from "./CardTile";
+import { Empty, useLots } from "./CollectionShared";
+import { LotEditor } from "./LotEditor";
+import { Button } from "./ui/button";
+import type { Card } from "../schemas/models";
 import { usePricing } from "../hooks/usePricing";
-
+import { compareCollectorNumbers } from "../services/cardSort";
 export default function CardBrowser({
   cards,
   markMissing = false,
@@ -14,47 +14,50 @@ export default function CardBrowser({
   cards: Card[];
   markMissing?: boolean;
 }) {
-  const pricing = usePricing();
-  const lots = useLots();
-  const [name, setName] = useState("");
-  const [ownership, setOwnership] = useState("all");
-  const [edition, setEdition] = useState("all");
-  const [rarity, setRarity] = useState("all");
-  const [color, setColor] = useState("all");
-  const [finish, setFinish] = useState("all");
-  const [type, setType] = useState("");
-  const [sort, setSort] = useState("name");
-  const [list, setList] = useState(false);
-  const [selected, setSelected] = useState<Card | null>(null);
+  const pricing = usePricing(),
+    lots = useLots();
+  const [name, setName] = useState(""),
+    [ownership, setOwnership] = useState("all"),
+    [edition, setEdition] = useState("all"),
+    [rarity, setRarity] = useState("all"),
+    [color, setColor] = useState("all"),
+    [type, setType] = useState("");
+  const [sort, setSort] = useState(markMissing ? "number" : "name"),
+    [list, setList] = useState(false),
+    [advanced, setAdvanced] = useState(false),
+    [selected, setSelected] = useState<Card | null>(null);
   const quantity = (id: string) =>
     lots.filter((l) => l.cardId === id).reduce((n, l) => n + l.quantity, 0);
+  const editions = [...new Set(cards.map((c) => c.set))];
+  const extraCount =
+    Number(color !== "all") +
+    Number(Boolean(type)) +
+    Number(!markMissing && edition !== "all");
   const filtered = cards
     .filter(
       (c) =>
         `${c.name} ${c.collector_number}`
           .toLowerCase()
           .includes(name.toLowerCase()) &&
-        (ownership === "all" ||
+        (!markMissing ||
+          ownership === "all" ||
           (ownership === "owned"
             ? quantity(c.id) > 0
             : quantity(c.id) === 0)) &&
-        (edition === "all" || c.set === edition) &&
-        (rarity === "all" || rarity === c.rarity) &&
+        (markMissing || edition === "all" || c.set === edition) &&
+        (rarity === "all" || c.rarity === rarity) &&
         (color === "all" ||
           (color === "C" ? !c.colors?.length : c.colors?.includes(color))) &&
-        (finish === "all" || c.finishes.includes(finish)) &&
         c.type_line.toLowerCase().includes(type.toLowerCase()),
     )
     .sort((a, b) =>
-      sort === "value"
-        ? (pricing.quote(b).amount ?? -1) - (pricing.quote(a).amount ?? -1)
-        : sort === "quantity"
-          ? quantity(b.id) - quantity(a.id)
-          : sort === "set"
-            ? a.set.localeCompare(b.set)
-            : sort === "rarity"
-              ? a.rarity.localeCompare(b.rarity)
-              : a.name.localeCompare(b.name),
+      sort === "number"
+        ? compareCollectorNumbers(a, b)
+        : sort === "value"
+          ? (pricing.quote(b).amount ?? -1) - (pricing.quote(a).amount ?? -1)
+          : sort === "quantity"
+            ? quantity(b.id) - quantity(a.id)
+            : a.name.localeCompare(b.name),
     );
   return (
     <>
@@ -63,30 +66,22 @@ export default function CardBrowser({
           <Search size={17} />
           <input
             aria-label="Nom ou numéro"
-            placeholder="Nom ou numéro de collection…"
+            placeholder="Nom ou numéro de carte…"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
-        <select
-          aria-label="Possession"
-          value={ownership}
-          onChange={(e) => setOwnership(e.target.value)}
-        >
-          <option value="all">Toutes les cartes</option>
-          <option value="owned">Possédées</option>
-          <option value="missing">Manquantes</option>
-        </select>
-        <select
-          aria-label="Édition"
-          value={edition}
-          onChange={(e) => setEdition(e.target.value)}
-        >
-          <option value="all">Toutes éditions</option>
-          {[...new Set(cards.map((c) => c.set))].map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
+        {markMissing && (
+          <select
+            aria-label="Possession"
+            value={ownership}
+            onChange={(e) => setOwnership(e.target.value)}
+          >
+            <option value="all">Toutes les cartes</option>
+            <option value="owned">Possédées</option>
+            <option value="missing">Manquantes</option>
+          </select>
+        )}
         <select
           aria-label="Rareté"
           value={rarity}
@@ -100,43 +95,24 @@ export default function CardBrowser({
           )}
         </select>
         <select
-          aria-label="Couleur"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        >
-          <option value="all">Couleurs</option>
-          {["W", "U", "B", "R", "G", "C"].map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-        <select
-          aria-label="Finition"
-          value={finish}
-          onChange={(e) => setFinish(e.target.value)}
-        >
-          <option value="all">Finitions</option>
-          {["nonfoil", "foil", "etched"].map((f) => (
-            <option key={f}>{f}</option>
-          ))}
-        </select>
-        <input
-          className="type-filter"
-          aria-label="Type de carte"
-          placeholder="Type de carte…"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-        />
-        <select
           aria-label="Tri des cartes"
           value={sort}
           onChange={(e) => setSort(e.target.value)}
         >
+          <option value="number">Numéro de carte</option>
           <option value="name">Nom</option>
           <option value="value">Valeur</option>
           <option value="quantity">Quantité</option>
-          <option value="rarity">Rareté</option>
-          <option value="set">Extension</option>
         </select>
+        <Button
+          variant="outline"
+          aria-expanded={advanced}
+          aria-controls="advanced-card-filters"
+          onClick={() => setAdvanced(!advanced)}
+        >
+          <SlidersHorizontal size={15} /> Plus de filtres
+          {extraCount > 0 ? ` (${extraCount})` : ""}
+        </Button>
         <Button
           variant="ghost"
           aria-label={list ? "Vue grille" : "Vue liste"}
@@ -145,6 +121,59 @@ export default function CardBrowser({
           {list ? <Grid2X2 size={18} /> : <List size={18} />}
         </Button>
       </div>
+      {advanced && (
+        <div className="advanced-filters" id="advanced-card-filters">
+          {!markMissing && editions.length > 1 && (
+            <label>
+              Édition
+              <select
+                aria-label="Édition"
+                value={edition}
+                onChange={(e) => setEdition(e.target.value)}
+              >
+                <option value="all">Toutes éditions</option>
+                {editions.map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label>
+            Couleur
+            <select
+              aria-label="Couleur"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+            >
+              <option value="all">Toutes les couleurs</option>
+              {["W", "U", "B", "R", "G", "C"].map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Type
+            <input
+              aria-label="Type de carte"
+              placeholder="Créature, artefact…"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+            />
+          </label>
+          {extraCount > 0 && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setColor("all");
+                setType("");
+                setEdition("all");
+              }}
+            >
+              Réinitialiser
+            </Button>
+          )}
+        </div>
+      )}
       <p className="muted result-count">
         {filtered.length} impressions affichées
       </p>

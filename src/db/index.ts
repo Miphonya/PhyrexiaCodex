@@ -66,7 +66,11 @@ export async function importBackup(input: unknown, replace = false) {
     const old = await prefs();
     await savePrefs(
       replace
-        ? b.preferences
+        ? {
+            ...b.preferences,
+            onboardingCompleted:
+              old.onboardingCompleted || b.preferences.onboardingCompleted,
+          }
         : {
             ...old,
             tracked: [...new Set([...old.tracked, ...b.preferences.tracked])],

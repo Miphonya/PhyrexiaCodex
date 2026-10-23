@@ -31,7 +31,7 @@ export default function SetPage() {
         description="Explorez les impressions, identifiez les manquantes et ajoutez vos exemplaires."
       />
       <QueryState loading={q.isPending && !local?.length} error={q.error} />
-      <CardBrowser markMissing cards={q.data ?? local ?? []} />
+      <CardBrowser key={code} markMissing cards={q.data ?? local ?? []} />
     </>
   );
 }
