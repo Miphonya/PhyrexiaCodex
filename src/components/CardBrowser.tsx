@@ -1,21 +1,26 @@
 import { Grid2X2, List, Search, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
+import LotsPanel from "./LotsPanel";
+import { Modal } from "./ui/dialog";
 import { CardTile } from "./CardTile";
 import { Empty, useLots } from "./CollectionShared";
 import { LotEditor } from "./LotEditor";
 import { Button } from "./ui/button";
-import type { Card } from "../schemas/models";
+import { cardTypeLine, type Card } from "../schemas/models";
 import { usePricing } from "../hooks/usePricing";
 import { compareCollectorNumbers } from "../services/cardSort";
 export default function CardBrowser({
   cards,
   markMissing = false,
   showEditionFilter = false,
+  manageOwned = false,
 }: {
   cards: Card[];
   markMissing?: boolean;
   showEditionFilter?: boolean;
+  manageOwned?: boolean;
 }) {
+  const [managing, setManaging] = useState<Card | null>(null);
   const pricing = usePricing(),
     lots = useLots();
   const [name, setName] = useState(""),
@@ -50,7 +55,7 @@ export default function CardBrowser({
         (rarity === "all" || c.rarity === rarity) &&
         (color === "all" ||
           (color === "C" ? !c.colors?.length : c.colors?.includes(color))) &&
-        c.type_line.toLowerCase().includes(type.toLowerCase()),
+        cardTypeLine(c).toLowerCase().includes(type.toLowerCase()),
     )
     .sort((a, b) =>
       sort === "number"
@@ -203,6 +208,8 @@ export default function CardBrowser({
             quantity={quantity(c.id)}
             missing={markMissing && quantity(c.id) === 0}
             onAdd={() => setSelected(c)}
+            onImageClick={() => (manageOwned || markMissing) && quantity(c.id) > 0 ? setManaging(c) : setSelected(c)}
+            imageAction={(manageOwned || markMissing) && quantity(c.id) > 0 ? "Gérer " + c.name : "Ajouter " + c.name}
           />
         ))}
       </div>
@@ -210,6 +217,17 @@ export default function CardBrowser({
         <Empty title="Aucune carte à afficher">
           Ajoutez une carte ou ajustez vos filtres.
         </Empty>
+      )}
+      {managing && (
+        <Modal title={"Gérer " + managing.name} onClose={() => setManaging(null)}>
+          <LotsPanel cardId={managing.id} />
+          <Button variant="outline" onClick={() => {
+            setSelected(managing);
+            setManaging(null);
+          }}>
+            Ajouter des exemplaires
+          </Button>
+        </Modal>
       )}
       {selected && (
         <LotEditor card={selected} onClose={() => setSelected(null)} />

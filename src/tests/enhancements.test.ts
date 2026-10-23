@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 import { db, prefs, updatePrefs, importBackup } from "../db";
-import { defaults, type Card, type ExchangeRate } from "../schemas/models";
+import { cardTypeLine, defaults, type Card, type ExchangeRate } from "../schemas/models";
 import { money, scryfallPriceProvider } from "../services/pricing";
 import { refreshExchangeRate } from "../services/exchange";
 import { parseListLine, prepareList, commitList } from "../services/listImport";
@@ -197,4 +197,11 @@ it("fonctionne depuis le catalogue local sans réseau et garde les numéros de l
   expect(rows[0].line).toBe(3);
   expect(rows[0].card?.id).toBe("tamiyo");
   expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("accepte les types portés par les faces réversibles de Scryfall", () => {
+  const reversible: Card = { ...card, type_line: undefined, card_faces: [{ name: "Blightsteel Colossus", type_line: "Artifact Creature — Phyrexian Golem" }, { name: "Blightsteel Colossus" }] };
+  expect(cardTypeLine(reversible).toLowerCase()).toContain("golem");
+  expect(cardTypeLine({ ...card, type_line: undefined })).toBe("");
+  expect(cardTypeLine(card)).toBe("Enchantment");
 });

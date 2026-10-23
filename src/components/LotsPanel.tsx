@@ -13,8 +13,10 @@ import { useUI } from "../stores/ui";
 
 export default function LotsPanel({
   tradeOnly = false,
+  cardId,
 }: {
   tradeOnly?: boolean;
+  cardId?: string;
 }) {
   const pricing = usePricing();
   const all = useLots();
@@ -28,6 +30,7 @@ export default function LotsPanel({
   const [merge, setMerge] = useState<[Lot, Lot] | null>(null);
   const lots = all.filter(
     (l) =>
+      (!cardId || l.cardId === cardId) &&
       (!tradeOnly || l.trade > 0) &&
       l.name.toLowerCase().includes(search.toLowerCase()) &&
       (condition === "all" || l.condition === condition) &&

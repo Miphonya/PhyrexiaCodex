@@ -64,6 +64,7 @@ export default function Owned() {
         </div>
       )}
       <CardBrowser
+        manageOwned
         showEditionFilter
         cards={cards.filter((c) => ids.includes(c.id))}
       />

@@ -85,10 +85,11 @@ export interface Card {
   lang: string;
   finishes: string[];
   colors?: string[];
-  type_line: string;
+  type_line?: string;
   image_uris?: { normal: string; small: string };
   card_faces?: {
     name: string;
+    type_line?: string;
     image_uris?: { normal: string; small: string };
   }[];
   prices: {
@@ -130,3 +131,5 @@ export function compatible(a: Lot, b: Lot) {
     ] as const
   ).every((k) => a[k] === b[k]);
 }
+
+export const cardTypeLine = (card: Card) => card.type_line ?? card.card_faces?.map((face) => face.type_line ?? "").join(" // ") ?? "";

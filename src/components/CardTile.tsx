@@ -6,6 +6,8 @@ export function CardTile({
   card,
   quantity = 0,
   onAdd,
+  onImageClick = onAdd,
+  imageAction,
   missing = false,
   finish = "nonfoil",
 }: {
@@ -14,6 +16,8 @@ export function CardTile({
   missing?: boolean;
   finish?: Lot["finish"];
   onAdd: () => void;
+  onImageClick?: () => void;
+  imageAction?: string;
 }) {
   const pricing = usePricing();
   const price = pricing.quote(card, finish);
@@ -23,6 +27,7 @@ export function CardTile({
   return (
     <article className={"card-tile" + (missing ? " is-missing" : "")}>
       <div className="card-art">
+        <button type="button" className="card-image-button" aria-label={imageAction ?? "Ajouter " + card.name} onClick={onImageClick}>
         {src && !failed ? (
           <img
             src={src}
@@ -36,6 +41,7 @@ export function CardTile({
             <small>Image indisponible</small>
           </div>
         )}
+        </button>
         {missing && <span className="missing-label">Manquante</span>}
         <span className="price" title={price.source}>
           {pricing.format(price.amount)}
