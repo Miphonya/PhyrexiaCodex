@@ -1,0 +1,145 @@
+import { useLiveQuery } from "dexie-react-hooks";
+import { Database, Layers3, ShieldCheck, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { db, prefs } from "../db";
+import { defaults } from "../schemas/models";
+import { money, scryfallPriceProvider } from "../services/pricing";
+
+export function usePreferences() {
+  return useLiveQuery(prefs, []) ?? defaults;
+}
+
+export function useLots() {
+  return useLiveQuery(() => db.lots.toArray(), []) ?? [];
+}
+
+export function useDebounced(value: string) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), 400);
+    return () => clearTimeout(id);
+  }, [value]);
+  return debounced;
+}
+
+export function Empty({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="empty">
+      <Layers3 size={36} />
+      <h3>{title}</h3>
+      <p>{children}</p>
+    </div>
+  );
+}
+
+export function QueryState({
+  loading,
+  error,
+}: {
+  loading: boolean;
+  error: Error | null;
+}) {
+  return (
+    <>
+      {loading && (
+        <div className="skeletons" aria-label="Chargement">
+          {[1, 2, 3].map((i) => (
+            <div key={i} />
+          ))}
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="error">
+          {error.message}
+        </p>
+      )}
+    </>
+  );
+}
+
+export function PageHead({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <header className="page-head">
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h1>
+          {title}
+          <span>.</span>
+        </h1>
+        <p className="muted">{description}</p>
+      </div>
+      {children}
+    </header>
+  );
+}
+
+export function Stats() {
+  const lots = useLots();
+  const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
+  const p = usePreferences();
+  let value = 0,
+    missing = 0;
+  for (const l of lots) {
+    const c = cards.find((c) => c.id === l.cardId);
+    const amount = c ? scryfallPriceProvider.quote(c, l.finish).amount : null;
+    if (amount === null) missing += l.quantity;
+    else value += amount * l.quantity;
+  }
+  return (
+    <div className="stats">
+      {[
+        {
+          label: "EXEMPLAIRES PHYSIQUES",
+          value: lots.reduce((n, l) => n + l.quantity, 0),
+          icon: Layers3,
+          note: `${new Set(lots.map((l) => l.cardId)).size} impressions distinctes`,
+        },
+        {
+          label: "CARTES DISTINCTES",
+          value: new Set(lots.map((l) => l.oracleId ?? l.cardId)).size,
+          icon: Sparkles,
+          note: "Identités de jeu · Oracle",
+        },
+        {
+          label: "VALEUR INDICATIVE",
+          value: money(value),
+          icon: ShieldCheck,
+          note: missing
+            ? `${missing} exemplaire(s) sans prix`
+            : "Prix Scryfall · EUR",
+        },
+        {
+          label: "EXTENSIONS SUIVIES",
+          value: p.tracked.length,
+          icon: Database,
+          note: "Votre archive personnelle",
+        },
+      ].map(({ label, value, icon: Icon, note }) => (
+        <div className="stat panel" key={label}>
+          <div>
+            <span>{label}</span>
+            <Icon size={17} />
+          </div>
+          <strong>{value}</strong>
+          <small>{note}</small>
+        </div>
+      ))}
+    </div>
+  );
+}
