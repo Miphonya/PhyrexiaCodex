@@ -16,8 +16,7 @@ export function usePhysicalLots() {
 export function useTradeLots() {
   const p = usePreferences();
   const lots = usePhysicalLots();
-  const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
-  return tradeLots(lots, p.autoTradeDuplicates, cards);
+  return tradeLots(lots, p.autoTradeDuplicates);
 }
 export function useCollectionView() {
   const p = usePreferences();

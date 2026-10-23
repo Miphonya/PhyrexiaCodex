@@ -1,20 +1,21 @@
-import type { Card, Lot } from "../schemas/models";
-const normalize = (name: string) => name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+import type { Lot } from "../schemas/models";
 /** Derived only: disabling automation restores the stored manual trade quantities. */
-export function tradeLots(lots: Lot[], automatic: boolean, cards: Card[] = []): Lot[] {
+export function tradeLots(lots: Lot[], automatic: boolean): Lot[] {
   if (!automatic) return lots;
-  const oracleByCard = new Map(cards.filter(c => c.oracle_id).map(c => [c.id, c.oracle_id!]));
-  const oracleByName = new Map(cards.filter(c => c.oracle_id).map(c => [normalize(c.name), c.oracle_id!]));
-  for (const lot of lots) if (lot.oracleId) oracleByName.set(normalize(lot.name), lot.oracleId);
   const groups = new Map<string, Lot[]>();
   for (const lot of lots) {
-    const key = lot.oracleId ?? oracleByCard.get(lot.cardId) ?? oracleByName.get(normalize(lot.name)) ?? normalize(lot.name);
+    // Collector numbers are identifiers: retain suffixes and full-art variants.
+    const set = lot.set.trim().toLowerCase();
+    const number = lot.collectorNumber.trim().toLowerCase();
+    const key = set && number ? JSON.stringify([set, number]) : JSON.stringify(["card", lot.cardId]);
     groups.set(key, [...(groups.get(key) ?? []), lot]);
   }
   const quantities = new Map<string, number>();
+  const finishRank = (lot: Lot) => lot.finish === "nonfoil" ? 1 : 0;
   for (const group of groups.values()) {
     let keep = 1;
-    for (const lot of [...group].sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))) {
+    const preferred = [...group].sort((a, b) => finishRank(a) - finishRank(b) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+    for (const lot of preferred) {
       const kept = Math.min(keep, lot.quantity); keep -= kept;
       quantities.set(lot.id, Math.max(0, lot.quantity - kept));
     }

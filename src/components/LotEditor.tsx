@@ -46,7 +46,7 @@ export function LotEditor({
   const notify = useUI((s) => s.notify);
   const change = <K extends keyof Lot>(k: K, v: Lot[K]) =>
     setValue({ ...value, [k]: v });
-  const automaticTrade = tradeLots([...physical.filter(l => l.id !== value.id), value], true, [card]).find(l => l.id === value.id)?.trade ?? 0;
+  const automaticTrade = tradeLots([...physical.filter(l => l.id !== value.id), value], true).find(l => l.id === value.id)?.trade ?? 0;
   async function submit(keep: boolean) {
     setBusy(true);
     try {
@@ -156,7 +156,7 @@ export function LotEditor({
             </select>
           </label>
         </div>
-        {p.autoTradeDuplicates && <p className="muted">Un exemplaire de chaque carte est conservé. Les suivants sont automatiquement proposés à l’échange. Ce calcul se désactive dans les paramètres.</p>}
+        {p.autoTradeDuplicates && <p className="muted">Un exemplaire est conservé par extension et numéro, en priorité foil ou etched. Les exemplaires normaux en surplus sont proposés à l’échange. Ce calcul se désactive dans les paramètres.</p>}
         <div className="checks">
           <label>
             <input
