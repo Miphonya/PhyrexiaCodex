@@ -1,6 +1,6 @@
 import { it, expect } from "vitest";
 import { tradeLots } from "../services/trade";
-import type { Lot } from "../schemas/models";
+import type { Card, Lot } from "../schemas/models";
 const lot = (id: string, quantity: number, extra: Partial<Lot> = {}): Lot => ({ id, cardId: id, oracleId: "oracle-norn", name: "Elesh Norn", set: "one", collectorNumber: "10", language: "fr", finish: "nonfoil", condition: "NM", signed: false, altered: false, quantity, trade: 0, notes: "", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z", ...extra });
 it("réserve un exemplaire et propose les suivants sans modifier les données sources", () => {
   const lots = [lot("a", 3)];
@@ -44,4 +44,21 @@ it("désactiver l’option restitue exactement les quantités manuelles", () => 
   const lots = [lot("a", 3, { trade: 1 }), lot("b", 1, { trade: 0 })];
   expect(tradeLots(lots, true).reduce((n, l) => n + l.trade, 0)).toBe(3);
   expect(tradeLots(lots, false)).toEqual(lots);
+});
+
+it("une unique Walk-In Closet // Forgotten Cellar ne devient pas un doublon à cause de ses deux noms ou d’un ancien marquage manuel", () => {
+  const single = lot("walk-in", 1, { name: "Walk-In Closet // Forgotten Cellar", oracleId: "walk-in-oracle", set: "dsk", collectorNumber: "205", trade: 1 });
+  expect(tradeLots([single], true)[0].trade).toBe(0);
+  const variant = { ...single, id: "walk-in-341", cardId: "walk-in-341", collectorNumber: "341" };
+  expect(tradeLots([single, variant], true).map(l => l.trade)).toEqual([0, 0]);
+  const promo = { ...single, id: "promo", set: "pdsk", collectorNumber: "205p" };
+  expect(tradeLots([single, variant, promo], true).map(l => l.trade)).toEqual([0, 0, 0]);
+  expect(tradeLots([single], false)[0].trade).toBe(1);
+});
+
+it("utilise le numéro du catalogue si un ancien lot porte un numéro erroné", () => {
+  const lots = [lot("walk", 1, { cardId: "walk-card", name: "Walk-In Closet // Forgotten Cellar", set: "dsk", collectorNumber: "205" }), lot("full-art", 1, { cardId: "full-art-card", name: "Walk-In Closet // Forgotten Cellar", set: "dsk", collectorNumber: "205" })];
+  const cards = [{ id: "walk-card", set: "dsk", collector_number: "205" }, { id: "full-art-card", set: "dsk", collector_number: "341" }] as Card[];
+  expect(tradeLots(lots, true, cards).map(l => l.trade)).toEqual([0, 0]);
+  expect(lots[1].collectorNumber).toBe("205");
 });

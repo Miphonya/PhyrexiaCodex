@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { printingKey } from "../services/trade";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Search } from "lucide-react";
 import { useState } from "react";
@@ -25,6 +26,13 @@ export default function LotsPanel({
   const p = usePreferences();
   const deckLots = useLots().filter(l => !tradeOnly && l.deckId && (!cardId || l.cardId === cardId));
   const cards = useLiveQuery(() => db.cards.toArray(), []) ?? [];
+  const cardById = new Map(cards.map(card => [card.id, card]));
+  const printingGroups = new Map<string, Lot[]>();
+  for (const lot of all) {
+    const key = printingKey(lot, cardById.get(lot.cardId));
+    const group = printingGroups.get(key);
+    if (group) group.push(lot); else printingGroups.set(key, [lot]);
+  }
   const notify = useUI((s) => s.notify);
   const [search, setSearch] = useState("");
   const [condition, setCondition] = useState("all");
@@ -43,7 +51,7 @@ export default function LotsPanel({
   let total = 0,
     unpriced = 0;
   for (const l of lots) {
-    const c = cards.find((c) => c.id === l.cardId);
+    const c = cardById.get(l.cardId);
     const price = c ? pricing.quote(c, l.finish).amount : null;
     if (price === null) unpriced++;
     else total += price * (tradeOnly ? l.trade : l.quantity);
@@ -101,7 +109,9 @@ export default function LotsPanel({
       </div>
       <div className={tradeOnly ? "trade-grid" : "lot-list"}>
         {lots.map((l) => {
-          const c = cards.find((c) => c.id === l.cardId);
+          const group = printingGroups.get(printingKey(l, cardById.get(l.cardId))) ?? [l];
+          const totalForPrinting = group.reduce((sum, other) => sum + other.quantity, 0);
+          const c = cardById.get(l.cardId);
           const candidate = all.find(
             (other) => other.id !== l.id && compatible(l, other),
           );
@@ -123,6 +133,7 @@ export default function LotsPanel({
                   {l.finish} · {l.condition} {l.signed ? "· Signée" : ""}{" "}
                   {l.altered ? "· Altérée" : ""}
                 </p>
+                {tradeOnly && <details className="trade-explanation"><summary>{p.autoTradeDuplicates ? `${totalForPrinting} exemplaires au total pour ${(c?.set ?? l.set).toUpperCase()} #${c?.collector_number ?? l.collectorNumber}` : "Proposé manuellement à l’échange"}</summary><p>{p.autoTradeDuplicates ? "Un exemplaire est réservé sur l’ensemble des lots ci-dessous, en priorité foil ou etched. Le nombre affiché sur la carte correspond seulement à ce lot." : "Le mode automatique est désactivé : la quantité d’échange provient d’un choix manuel enregistré. Utilisez Retirer du Trade pour l’enlever."}</p><ul>{group.map(other => <li key={other.id}>{other.quantity} × {other.name} · {other.language} · {other.finish} · {other.condition}{other.id === l.id ? " · ce lot" : ""}</li>)}</ul><Link to="/cards">Vérifier dans la collection →</Link></details>}
                 {l.notes && <p>{l.notes}</p>}
                 <small>
                   {l.quantity} exemplaire(s) ·{" "}

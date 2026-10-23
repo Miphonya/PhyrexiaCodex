@@ -45,9 +45,9 @@ export default function App() {
   }, []);
   const links = [
     { to: "/", label: "Collection", icon: Layers3 },
-    { to: "/add", label: "Ajouter", icon: ScanLine },
     { to: "/decks", label: "Decks", icon: Library },
     { to: "/trade", label: "Échanges", icon: ArrowLeftRight },
+    { to: "/add", label: "Scan", icon: ScanLine },
     { to: "/settings", label: "Paramètres", icon: Settings2 },
   ];
   return (
@@ -64,23 +64,15 @@ export default function App() {
         <div className="sidebar-label">VOTRE ARCHIVE</div>
         <nav aria-label="Navigation principale">
           {links.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} end={to === "/"}>
+            <NavLink key={to} to={to} end={to === "/"} className={to === "/settings" ? "mobile-settings-link" : undefined}>
               <Icon size={19} />
-              <span>
-                {to === "/add" ? (
-                  <>
-                    <span className="nav-desktop-label">Ajouter</span>
-                    <span className="nav-mobile-label">Ajouter</span>
-                  </>
-                ) : (
-                  label
-                )}
-              </span>
+              <span>{label}</span>
               {to === "/" && <ChevronRight className="nav-chevron" size={14} />}
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-bottom">
+          <NavLink to="/settings" className="sidebar-settings"><Settings2 size={18} />Paramètres</NavLink>
           <div className="local-badge">
             <span className="status-dot" /> LOCAL FIRST
           </div>

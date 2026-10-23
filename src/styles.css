@@ -3445,3 +3445,10 @@ label.search > input { min-width: 0; flex: 1 1 auto; margin: 0; }
 .deck-overview-item .deck-cover-card { height: 100%; }
 .deck-delete-button { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #d7c9b566; border-radius: 6px; color: #e8ded0; background: #0b0b0ddd; cursor: pointer; }
 .deck-delete-button:hover { background: var(--primary); }
+@media(min-width:761px) { .sidebar nav a.mobile-settings-link { display: none; } }
+.sidebar-settings { display: flex; align-items: center; gap: 12px; color: var(--text-muted); padding: 12px 0; margin-bottom: 20px; font-size: 12px; }
+.sidebar-settings:hover, .sidebar-settings.active { color: var(--porcelain); }
+.trade-explanation { margin: 12px 0; font-size: 11px; line-height: 1.7; color: var(--text-muted); }
+.trade-explanation summary { cursor: pointer; color: var(--porcelain); }
+.trade-explanation ul { padding-left: 16px; overflow-wrap: anywhere; }
+.trade-explanation a { text-decoration: underline; }

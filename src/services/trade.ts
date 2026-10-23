@@ -1,13 +1,15 @@
-import type { Lot } from "../schemas/models";
+import type { Card, Lot } from "../schemas/models";
+export function printingKey(lot: Lot, card?: Pick<Card, "set" | "collector_number">): string {
+  const set = (card?.set || lot.set).trim().toLowerCase(), number = (card?.collector_number || lot.collectorNumber).trim().toLowerCase();
+  return set && number ? JSON.stringify([set, number]) : JSON.stringify(["card", lot.cardId]);
+}
 /** Derived only: disabling automation restores the stored manual trade quantities. */
-export function tradeLots(lots: Lot[], automatic: boolean): Lot[] {
+export function tradeLots(lots: Lot[], automatic: boolean, cards: Card[] = []): Lot[] {
   if (!automatic) return lots;
+  const catalog = new Map(cards.map(card => [card.id, card]));
   const groups = new Map<string, Lot[]>();
   for (const lot of lots) {
-    // Collector numbers are identifiers: retain suffixes and full-art variants.
-    const set = lot.set.trim().toLowerCase();
-    const number = lot.collectorNumber.trim().toLowerCase();
-    const key = set && number ? JSON.stringify([set, number]) : JSON.stringify(["card", lot.cardId]);
+    const key = printingKey(lot, catalog.get(lot.cardId));
     groups.set(key, [...(groups.get(key) ?? []), lot]);
   }
   const quantities = new Map<string, number>();

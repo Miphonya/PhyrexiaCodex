@@ -1,4 +1,4 @@
-import { usePhysicalLots, usePreferences } from "./CollectionShared";
+import { useCollectionView, usePhysicalLots, usePreferences } from "./CollectionShared";
 import { tradeLots } from "../services/trade";
 import { usePricing } from "../hooks/usePricing";
 import { languages } from "../schemas/languages";
@@ -20,6 +20,7 @@ export function LotEditor({
   const { defaultLanguage } = usePricing();
   const p = usePreferences();
   const physical = usePhysicalLots();
+  const catalog = useCollectionView().cards;
   const now = new Date().toISOString();
   const [value, setValue] = useState<Lot>(
     lot ?? {
@@ -46,7 +47,7 @@ export function LotEditor({
   const notify = useUI((s) => s.notify);
   const change = <K extends keyof Lot>(k: K, v: Lot[K]) =>
     setValue({ ...value, [k]: v });
-  const automaticTrade = tradeLots([...physical.filter(l => l.id !== value.id), value], true).find(l => l.id === value.id)?.trade ?? 0;
+  const automaticTrade = tradeLots([...physical.filter(l => l.id !== value.id), value], true, [...catalog.filter(c => c.id !== card.id), card]).find(l => l.id === value.id)?.trade ?? 0;
   async function submit(keep: boolean) {
     setBusy(true);
     try {

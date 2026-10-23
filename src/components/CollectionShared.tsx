@@ -15,8 +15,10 @@ export function usePhysicalLots() {
 }
 export function useTradeLots() {
   const p = usePreferences();
-  const lots = usePhysicalLots();
-  return tradeLots(lots, p.autoTradeDuplicates);
+  return useLiveQuery(async () => {
+    const [lots, cards] = await Promise.all([db.lots.toArray(), db.cards.toArray()]);
+    return tradeLots(lots, p.autoTradeDuplicates, cards);
+  }, [p.autoTradeDuplicates]) ?? [];
 }
 export function useCollectionView() {
   const p = usePreferences();
