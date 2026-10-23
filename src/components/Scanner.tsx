@@ -1,3 +1,8 @@
+import { usePreferences } from "./CollectionShared";
+import { updatePrefs } from "../db";
+import { useVisionSession } from "../stores/vision";
+import { identifyWithVision } from "../services/vision";
+import { Modal } from "./ui/dialog";
 import { Camera, ImagePlus, ScanText, Square, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
@@ -5,6 +10,10 @@ import { SearchResults } from "./SearchResults";
 import { photoQuery } from "../services/ocrHints";
 import type { OCRProgress } from "../services/ocr";
 export function Scanner() {
+  const preferences = usePreferences();
+  const apiKey = useVisionSession((s) => s.apiKey);
+  const [source, setSource] = useState<"local" | "plus">("local"),
+    [plusConfirm, setPlusConfirm] = useState(false);
   const video = useRef<HTMLVideoElement>(null),
     stream = useRef<MediaStream | null>(null),
     controller = useRef<AbortController | null>(null),
@@ -32,6 +41,7 @@ export function Scanner() {
     requestId.current++;
     controller.current?.abort();
     controller.current = null;
+    if (source === "plus") setSource("local");
     setBusy(false);
   }
   useEffect(() => {
@@ -86,6 +96,7 @@ export function Scanner() {
     stopCamera();
     setActive(false);
     setPhoto(src);
+    setSource("local");
     setError("");
     setQuery("");
     setRaw("");
@@ -129,6 +140,47 @@ export function Scanner() {
           "Lecture OCR impossible. Vous pouvez saisir le nom manuellement ou reprendre une photo. " +
             (e instanceof Error ? e.message : ""),
         );
+    } finally {
+      if (mounted.current && id === requestId.current) {
+        setBusy(false);
+        controller.current = null;
+      }
+    }
+  }
+  async function analyzeVisual() {
+    if (!photo || !apiKey) return;
+    cancel();
+    const id = ++requestId.current;
+    const aborter = new AbortController();
+    controller.current = aborter;
+    setPlusConfirm(false);
+    setSource("plus");
+    setConfidence(null);
+    setBusy(true);
+    setError("");
+    setQuery("");
+    setProgress({ label: "Analyse visuelle +", progress: 0 });
+    try {
+      const result = await identifyWithVision(photo, apiKey, aborter.signal);
+      if (mounted.current && id === requestId.current) {
+        setName(result.name);
+        setSet(result.set);
+        setNumber(result.collectorNumber);
+        setRaw(JSON.stringify(result, null, 2));
+        if (!result.name)
+          setError(
+            "La carte n’a pas pu être identifiée. Reprenez une photo ou corrigez le nom manuellement.",
+          );
+      }
+    } catch (e) {
+      if (
+        mounted.current &&
+        id === requestId.current &&
+        !aborter.signal.aborted
+      ) {
+        setError((e as Error).message);
+        setSource("local");
+      }
     } finally {
       if (mounted.current && id === requestId.current) {
         setBusy(false);
@@ -181,6 +233,24 @@ export function Scanner() {
   }
   return (
     <>
+      {!preferences.scannerPrivacySeen && (
+        <aside className="scanner-first-use panel">
+          <h3>Votre photo, votre choix</h3>
+          <p>
+            <strong>Base locale :</strong> OCR sur votre appareil, aucune clé
+            nécessaire. <strong>Mode + facultatif :</strong> ajoutez votre clé
+            personnelle dans les paramètres, puis confirmez chaque envoi de
+            photo à OpenAI. Le service peut être payant ; la clé reste
+            uniquement en mémoire jusqu’au rechargement.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => void updatePrefs({ scannerPrivacySeen: true })}
+          >
+            Compris, rester maître de mes photos
+          </Button>
+        </aside>
+      )}
       <section className="photo-scanner panel" aria-label="Ajout par photo">
         <div className="method-intro">
           <p className="eyebrow">CAPTURE ASSISTÉE</p>
@@ -248,12 +318,13 @@ export function Scanner() {
                   <h3>{progress.label}</h3>
                   <progress
                     max={100}
-                    value={progress.progress}
+                    value={source === "plus" ? undefined : progress.progress}
                     aria-label="Progression OCR"
                   />
                   <p>
-                    {progress.progress} % · Le premier chargement peut prendre
-                    quelques secondes.
+                    {source === "plus"
+                      ? "Photo transmise à OpenAI à votre demande…"
+                      : `${progress.progress} % · Le premier chargement peut prendre quelques secondes.`}
                   </p>
                   <Button variant="outline" onClick={cancel}>
                     <Square size={13} /> Annuler la lecture
@@ -263,14 +334,26 @@ export function Scanner() {
                 <>
                   <div className="ocr-status">
                     <ScanText size={17} />
-                    {confidence === null
-                      ? "Recherche manuelle assistée"
-                      : `Lecture terminée · confiance indicative ${Math.round(confidence)} %`}
+                    {source === "plus"
+                      ? "Suggestion visuelle + · à vérifier"
+                      : confidence === null
+                        ? "Recherche manuelle assistée"
+                        : `Lecture terminée · confiance indicative ${Math.round(confidence)} %`}
                   </div>
                   <p className="muted">
                     Vérifiez et corrigez ces champs. Le texte reconnu peut être
                     inexact ; aucune carte n’est ajoutée automatiquement.
                   </p>
+                  {apiKey && (
+                    <Button
+                      className="vision-action"
+                      type="button"
+                      variant="outline"
+                      onClick={() => setPlusConfirm(true)}
+                    >
+                      Analyser l’image avec +
+                    </Button>
+                  )}
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -327,7 +410,11 @@ export function Scanner() {
                   </form>
                   {raw && (
                     <details className="ocr-raw">
-                      <summary>Voir le texte reconnu</summary>
+                      <summary>
+                        {source === "plus"
+                          ? "Voir la proposition visuelle"
+                          : "Voir le texte reconnu"}
+                      </summary>
                       <pre>{raw}</pre>
                     </details>
                   )}
@@ -342,12 +429,34 @@ export function Scanner() {
           </p>
         )}
         <p className="scanner-privacy">
-          Votre photo reste dans cette page, puis est libérée lorsque vous la
-          quittez. Seuls les champs de recherche validés sont envoyés à
-          Scryfall. Les fichiers OCR sont fournis par le site, sans service de
-          reconnaissance distant.
+          En mode Base, votre photo reste sur cet appareil. Les champs validés
+          sont envoyés à Scryfall pour rechercher une impression. Le mode +
+          n’envoie la photo à OpenAI qu’après votre confirmation. La photo n’est
+          pas conservée par šotm.
         </p>
       </section>
+      {plusConfirm && (
+        <Modal
+          title="Envoyer cette photo pour analyse + ?"
+          onClose={() => setPlusConfirm(false)}
+        >
+          <p>
+            Cette photo sera transmise à OpenAI avec votre clé personnelle pour
+            identifier la carte. Le fournisseur peut facturer cet appel et ses
+            conditions de traitement s’appliquent. Votre collection complète
+            n’est pas envoyée. La proposition devra être vérifiée avant tout
+            ajout.
+          </p>
+          <div className="actions">
+            <Button variant="outline" onClick={() => setPlusConfirm(false)}>
+              Rester en local
+            </Button>
+            <Button onClick={() => void analyzeVisual()}>
+              Envoyer cette photo à OpenAI
+            </Button>
+          </div>
+        </Modal>
+      )}
       <SearchResults key={query} query={query} />
     </>
   );

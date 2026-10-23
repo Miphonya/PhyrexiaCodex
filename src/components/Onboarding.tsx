@@ -1,3 +1,4 @@
+import { BrandName } from "./BrandName";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
@@ -14,7 +15,7 @@ import type { CardLanguage } from "../schemas/languages";
 import { LanguageOptions } from "./LanguageSettings";
 import { Button } from "./ui/button";
 const logo = new URL("../../public/logo.svg", import.meta.url).href;
-const steps = ["Bienvenue", "Apparence", "Devise", "Langue"];
+const steps = ["Bienvenue", "Apparence", "Devise", "Langue", "Données"];
 function Welcome({ initial }: { initial: Preferences }) {
   const [step, setStep] = useState(0),
     [draft, setDraft] = useState(initial),
@@ -48,7 +49,7 @@ function Welcome({ initial }: { initial: Preferences }) {
     <div className="onboarding">
       <div className="onboarding-brand">
         <img src={logo} alt="" />
-        <span>šotm</span>
+        <BrandName />
       </div>
       <main
         className="onboarding-panel panel"
@@ -67,7 +68,9 @@ function Welcome({ initial }: { initial: Preferences }) {
           ))}
         </ol>
         <div className="onboarding-content">
-          <p className="eyebrow">L’ARCHIVE S’ÉVEILLE · {step + 1} / 4</p>
+          <p className="eyebrow">
+            L’ARCHIVE S’ÉVEILLE · {step + 1} / {steps.length}
+          </p>
           <h1 ref={heading} tabIndex={-1}>
             {
               [
@@ -75,6 +78,7 @@ function Welcome({ initial }: { initial: Preferences }) {
                 "Entre ombre et porcelaine.",
                 "La valeur de votre archive.",
                 "Chaque carte a sa langue.",
+                "Vos photos. Votre choix.",
               ][step]
             }
           </h1>
@@ -186,6 +190,30 @@ function Welcome({ initial }: { initial: Preferences }) {
               </p>
             </>
           )}
+          {step === 4 && (
+            <>
+              <p>
+                <strong>Base locale, sans clé.</strong> La lecture OCR
+                français/anglais se fait sur votre appareil. Vos photos ne sont
+                pas envoyées à un service de reconnaissance.
+              </p>
+              <div className="onboarding-promise">
+                <ShieldCheck size={22} />
+                <p>
+                  Le mode + est facultatif. Il nécessite votre clé personnelle,
+                  saisie dans les paramètres pour la session uniquement, et une
+                  confirmation avant chaque envoi de photo à OpenAI.
+                </p>
+              </div>
+              <p className="muted">
+                Le service externe peut être payant et ses conditions
+                s’appliquent. La clé n’est jamais incluse dans le code ou les
+                sauvegardes. La collection reste locale ; seule la photo que
+                vous choisissez d’analyser est envoyée. Vous pouvez rester
+                entièrement en mode Base.
+              </p>
+            </>
+          )}
         </div>
         {error && (
           <p role="alert" className="error">
@@ -204,7 +232,7 @@ function Welcome({ initial }: { initial: Preferences }) {
           ) : (
             <span />
           )}
-          {step < 3 ? (
+          {step < steps.length - 1 ? (
             <Button onClick={() => setStep(step + 1)}>
               {step === 0 ? "Commencer" : "Continuer"}
               <ArrowRight size={16} />

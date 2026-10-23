@@ -1,3 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { RecognitionSettings } from "../components/RecognitionSettings";
+import { resetAppData } from "../services/reset";
+import { useVisionSession } from "../stores/vision";
 import { LanguageSettings } from "../components/LanguageSettings";
 import { CurrencySettings } from "../components/CurrencySettings";
 import {
@@ -16,11 +20,15 @@ import { backupSchema, type Backup, type Preferences } from "../schemas/models";
 import { useUI } from "../stores/ui";
 
 export default function Settings() {
+  const queryClient = useQueryClient();
   const p = usePreferences();
   const notify = useUI((s) => s.notify);
   const [backup, setBackup] = useState<Backup | null>(null);
   const [replace, setReplace] = useState(false);
   const [clear, setClear] = useState(false);
+  const [reset, setReset] = useState(false),
+    [resetConfirmed, setResetConfirmed] = useState(false),
+    [resetBusy, setResetBusy] = useState(false);
   const [error, setError] = useState("");
   const [usage, setUsage] = useState("");
   useEffect(() => {
@@ -71,6 +79,7 @@ export default function Settings() {
       <section className="settings-grid">
         <CurrencySettings />
         <LanguageSettings />
+        <RecognitionSettings />
         <div className="panel setting">
           <ShieldCheck />
           <h2>Local, par nature</h2>
@@ -194,6 +203,82 @@ export default function Settings() {
           </p>
         </div>
       </section>
+      <section className="panel setting reset-settings">
+        <h2>Réinitialiser šotm</h2>
+        <p>
+          Efface définitivement la collection, les lots Trade, les préférences,
+          le catalogue et le cache OCR de ce navigateur. L’accueil de première
+          utilisation sera affiché à nouveau. Aucun autre appareil n’est
+          affecté.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setReset(true);
+            setResetConfirmed(false);
+            setError("");
+          }}
+        >
+          Réinitialiser l’application
+        </Button>
+      </section>
+      {reset && (
+        <Modal
+          title="Tout effacer sur cet appareil ?"
+          onClose={() => {
+            if (!resetBusy) setReset(false);
+          }}
+        >
+          <p>
+            Cette suppression est définitive. Exportez votre collection avant de
+            continuer si vous souhaitez la conserver.
+          </p>
+          <Button variant="outline" onClick={() => void download()}>
+            Exporter avant de réinitialiser
+          </Button>
+          <label className="reset-confirm">
+            <input
+              type="checkbox"
+              checked={resetConfirmed}
+              onChange={(e) => setResetConfirmed(e.target.checked)}
+            />
+            Je comprends que toute ma collection locale sera supprimée.
+          </label>
+          {error && (
+            <p role="alert" className="error">
+              {error}
+            </p>
+          )}
+          <div className="actions">
+            <Button
+              variant="outline"
+              disabled={resetBusy}
+              onClick={() => setReset(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              disabled={!resetConfirmed || resetBusy}
+              onClick={async () => {
+                setResetBusy(true);
+                try {
+                  useVisionSession.getState().clear();
+                  await resetAppData();
+                  queryClient.clear();
+                  useUI.setState({ message: "" });
+                } catch {
+                  setError(
+                    "Réinitialisation impossible. Réessayez après avoir fermé les autres onglets de l’app.",
+                  );
+                  setResetBusy(false);
+                }
+              }}
+            >
+              {resetBusy ? "Effacement…" : "Tout effacer"}
+            </Button>
+          </div>
+        </Modal>
+      )}
       {backup && (
         <Modal
           title="Restaurer une sauvegarde"

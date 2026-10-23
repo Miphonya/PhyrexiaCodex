@@ -1,3 +1,4 @@
+import { Layers3, ChevronDown } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 import CardBrowser from "../components/CardBrowser";
@@ -62,8 +63,20 @@ export default function Owned() {
           </Button>
         </div>
       )}
-      <CardBrowser cards={cards.filter((c) => ids.includes(c.id))} />
-      <LotsPanel />
+      <CardBrowser
+        showEditionFilter
+        cards={cards.filter((c) => ids.includes(c.id))}
+      />
+      <details className="owned-lots">
+        <summary>
+          <Layers3 size={18} />
+          <span>
+            Gérer mes exemplaires<small>Quantités, langues et états</small>
+          </span>
+          <ChevronDown size={17} />
+        </summary>
+        <LotsPanel />
+      </details>
     </>
   );
 }

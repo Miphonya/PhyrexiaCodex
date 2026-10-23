@@ -10,9 +10,11 @@ import { compareCollectorNumbers } from "../services/cardSort";
 export default function CardBrowser({
   cards,
   markMissing = false,
+  showEditionFilter = false,
 }: {
   cards: Card[];
   markMissing?: boolean;
+  showEditionFilter?: boolean;
 }) {
   const pricing = usePricing(),
     lots = useLots();
@@ -32,7 +34,7 @@ export default function CardBrowser({
   const extraCount =
     Number(color !== "all") +
     Number(Boolean(type)) +
-    Number(!markMissing && edition !== "all");
+    Number(!markMissing && !showEditionFilter && edition !== "all");
   const filtered = cards
     .filter(
       (c) =>
@@ -61,7 +63,7 @@ export default function CardBrowser({
     );
   return (
     <>
-      <div className="toolbar wrap">
+      <div className="toolbar wrap card-toolbar">
         <label className="search">
           <Search size={17} />
           <input
@@ -80,6 +82,22 @@ export default function CardBrowser({
             <option value="all">Toutes les cartes</option>
             <option value="owned">Possédées</option>
             <option value="missing">Manquantes</option>
+          </select>
+        )}
+        {showEditionFilter && !markMissing && (
+          <select
+            className="extension-filter"
+            aria-label="Extension des cartes"
+            value={edition}
+            onChange={(e) => setEdition(e.target.value)}
+          >
+            <option value="all">Toutes les extensions</option>
+            {editions.map((code) => (
+              <option key={code} value={code}>
+                {cards.find((c) => c.set === code)?.set_name ?? code} (
+                {code.toUpperCase()})
+              </option>
+            ))}
           </select>
         )}
         <select
@@ -123,7 +141,7 @@ export default function CardBrowser({
       </div>
       {advanced && (
         <div className="advanced-filters" id="advanced-card-filters">
-          {!markMissing && editions.length > 1 && (
+          {!markMissing && !showEditionFilter && editions.length > 1 && (
             <label>
               Édition
               <select

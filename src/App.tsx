@@ -1,3 +1,4 @@
+import { BrandName } from "./components/BrandName";
 import { ExchangeSync } from "./components/CurrencySettings";
 import {
   ArrowLeftRight,
@@ -52,15 +53,24 @@ export default function App() {
       </a>
       <aside className="sidebar">
         <NavLink to="/" className="brand">
-          <img src={logo} alt="šotm en écriture phyrexiane" />
-          <span>šotm</span>
+          <img className="brand-emblem" src={logo} alt="" />
+          <BrandName />
         </NavLink>
         <div className="sidebar-label">VOTRE ARCHIVE</div>
         <nav aria-label="Navigation principale">
           {links.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} end={to === "/"}>
               <Icon size={19} />
-              <span>{label}</span>
+              <span>
+                {to === "/add" ? (
+                  <>
+                    <span className="nav-desktop-label">Ajouter / Scanner</span>
+                    <span className="nav-mobile-label">Ajouter</span>
+                  </>
+                ) : (
+                  label
+                )}
+              </span>
               {to === "/" && <ChevronRight className="nav-chevron" size={14} />}
             </NavLink>
           ))}
@@ -80,7 +90,16 @@ export default function App() {
       <div className="workspace">
         <div className="topbar">
           <span>
-            šotm <ChevronRight size={12} /> <b>Archive personnelle</b>
+            <NavLink
+              to="/"
+              className="header-brand"
+              aria-label="šotm — Collection"
+            >
+              <img className="brand-emblem" src={logo} alt="" />
+              <BrandName />
+            </NavLink>
+            <ChevronRight className="header-chevron" size={12} />
+            <b>Archive personnelle</b>
           </span>
           <span className="privacy">
             <ShieldCheck size={14} /> Stockage local <i />{" "}

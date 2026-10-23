@@ -15,6 +15,7 @@ self.addEventListener("install", (event) => {
         "./",
         "./index.html",
         "./logo.svg",
+        "./wordmark.svg",
         "./favicon.svg",
         ...assets,
       ]);
